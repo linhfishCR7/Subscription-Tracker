@@ -3,41 +3,49 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Subscription Tracker – PWA</title>
+  <title>Subscription Tracker – PWA + Firebase + Gmail + Google Calendar</title>
+
+  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#6ee7ff" />
   <link rel="icon" href="icon-192.png" />
+
+  <!-- Firebase (v11 CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js"></script>
+
+  <!-- Google Identity Services (OAuth) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
 <div class="wrap">
   <h1>Subscription Tracker</h1>
-  <div class="sub">Quản lý thuê bao Google, Apple… – PWA có thông báo nền (khi khả dụng).</div>
+  <div class="sub">PWA + Firestore sync + Gmail scan + <b>Google Calendar auto-sync</b>. 🧊</div>
 
-  <div class="cap small" id="supportNote"></div>
+  <div class="card">
+    <div class="authbar">
+      <button id="btnLogin">Đăng nhập Google</button>
+      <button id="btnLogout" class="ghost hidden">Đăng xuất</button>
+      <button id="btnGmail" class="ghost hidden">Kết nối Gmail (scan hoá đơn)</button>
+      <button id="btnCalendar" class="ghost hidden">Kết nối Calendar (auto-sync)</button>
+      <span id="userInfo" class="small muted"></span>
+    </div>
+    <div class="cap small" id="supportNote"></div>
+  </div>
 
-  <div class="grid cols-2">
+  <div class="grid cols-2" style="margin-top:14px">
     <div class="card">
       <h3>Thêm / Sửa thuê bao</h3>
       <div class="row">
-        <div>
-          <label>Tên dịch vụ</label>
-          <input id="name" placeholder="Ví dụ: Google One 2TB">
-        </div>
-        <div>
-          <label>Nhà cung cấp</label>
-          <input id="provider" placeholder="Google, Apple, Adobe…">
-        </div>
+        <div><label>Tên dịch vụ</label><input id="name" placeholder="Ví dụ: Google One 2TB"></div>
+        <div><label>Nhà cung cấp</label><input id="provider" placeholder="Google, Apple, Adobe…"></div>
       </div>
       <div class="row">
-        <div>
-          <label>Giá mỗi kỳ</label>
-          <input id="price" type="number" step="0.01" placeholder="vd 199000">
-        </div>
-        <div>
-          <label>Tiền tệ</label>
-          <input id="currency" placeholder="VND, USD…" value="VND">
-        </div>
+        <div><label>Giá mỗi kỳ</label><input id="price" type="number" step="0.01" placeholder="vd 199000"></div>
+        <div><label>Tiền tệ</label><input id="currency" placeholder="VND, USD…" value="VND"></div>
       </div>
       <div class="row">
         <div>
@@ -50,27 +58,16 @@
           </select>
         </div>
         <div id="customDaysWrap" class="hidden">
-          <label>Số ngày mỗi kỳ</label>
-          <input id="customDays" type="number" min="1" value="30">
+          <label>Số ngày mỗi kỳ</label><input id="customDays" type="number" min="1" value="30">
         </div>
       </div>
       <div class="row">
-        <div>
-          <label>Ngày bắt đầu hoặc lần thanh toán gần nhất</label>
-          <input id="startDate" type="date">
-        </div>
-        <div>
-          <label>Nhắc trước (ngày)</label>
-          <input id="remindBefore" type="number" value="7" min="0">
-        </div>
+        <div><label>Ngày bắt đầu hoặc lần thanh toán gần nhất</label><input id="startDate" type="date"></div>
+        <div><label>Nhắc trước (ngày)</label><input id="remindBefore" type="number" value="7" min="0"></div>
       </div>
       <div class="row">
-        <div>
-          <label>Thẻ (tags)</label>
-          <input id="tags" placeholder="gia đình, công việc… (phân tách bởi dấu phẩy)">
-        </div>
-        <div>
-          <label>Trạng thái</label>
+        <div><label>Thẻ (tags)</label><input id="tags" placeholder="gia đình, công việc… (phân tách bởi dấu phẩy)"></div>
+        <div><label>Trạng thái</label>
           <select id="status">
             <option value="active" selected>Đang dùng</option>
             <option value="paused">Tạm dừng</option>
@@ -78,13 +75,12 @@
           </select>
         </div>
       </div>
-      <label>Ghi chú</label>
-      <textarea id="notes" placeholder="ID hóa đơn, email đăng ký, kênh thanh toán, gói cước…"></textarea>
+      <label>Ghi chú</label><textarea id="notes" placeholder="ID hóa đơn, email đăng ký, kênh thanh toán, gói cước…"></textarea>
       <div class="toolbar" style="margin-top:8px">
         <button id="saveBtn">Lưu thuê bao</button>
         <button class="ghost" id="resetBtn">Làm mới</button>
         <button class="ghost" id="enableNotify">Bật thông báo & lịch nền</button>
-        <span class="right small muted">Tự động tính ngày gia hạn tiếp theo</span>
+        <span class="right small muted">Tự động đồng bộ Google Calendar nếu đã kết nối</span>
       </div>
       <input type="hidden" id="editId" />
     </div>
@@ -106,7 +102,7 @@
         <button class="ghost" id="exportCSV">Xuất CSV</button>
         <button class="ghost" id="downloadICS">Tải lịch .ics (tất cả)</button>
       </div>
-      <div class="small muted" style="margin-top:6px">PWA có thể nhắc nền qua Service Worker khi thiết bị hỗ trợ Periodic Background Sync (Android Chrome). Trên iOS/macOS, nên import .ics vào Calendar để chắc chắn có nhắc.</div>
+      <div class="small muted" style="margin-top:6px">Android: Periodic Background Sync; iOS/macOS: có Google Calendar nhắc qua cloud, khỏi cần .ics.</div>
     </div>
   </div>
 
@@ -125,21 +121,11 @@
       </select>
       <div class="right small muted nowrap" id="totals"></div>
     </div>
-
     <table id="table">
-      <thead>
-        <tr>
-          <th>Tên</th>
-          <th>Nhà cung cấp</th>
-          <th>Giá/kỳ</th>
-          <th>Chu kỳ</th>
-          <th>Tiến độ kỳ</th>
-          <th>Gia hạn tiếp theo</th>
-          <th>Nhắc</th>
-          <th>Thẻ</th>
-          <th></th>
-        </tr>
-      </thead>
+      <thead><tr>
+        <th>Tên</th><th>Nhà cung cấp</th><th>Giá/kỳ</th><th>Chu kỳ</th>
+        <th>Tiến độ kỳ</th><th>Gia hạn tiếp theo</th><th>Nhắc</th><th>Thẻ</th><th></th>
+      </tr></thead>
       <tbody></tbody>
     </table>
   </div>

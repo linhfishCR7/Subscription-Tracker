@@ -29,7 +29,7 @@ h1 {
 
 .sub {
     color: var(--muted);
-    margin-bottom: 18px
+    margin-bottom: 12px
 }
 
 .wrap {
@@ -91,11 +91,6 @@ button.ghost {
     background: transparent;
     color: var(--pri);
     border: 1px solid #2f3847
-}
-
-button.warn {
-    background: var(--warn);
-    color: #241a05
 }
 
 button.bad {
@@ -168,6 +163,14 @@ th {
     color: var(--muted)
 }
 
+.small {
+    font-size: 12px
+}
+
+.nowrap {
+    white-space: nowrap
+}
+
 .progress {
     height: 8px;
     background: #10131a;
@@ -197,14 +200,6 @@ th {
     margin-left: auto
 }
 
-.small {
-    font-size: 12px
-}
-
-.nowrap {
-    white-space: nowrap
-}
-
 .hidden {
     display: none
 }
@@ -215,4 +210,11 @@ th {
     border-radius: 12px;
     background: #0e131b;
     color: #c9d3e6
+}
+
+.authbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 10px 0
 }

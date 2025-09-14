@@ -1,7 +1,9 @@
 // Basic cache
 const CACHE = 'subs-v1';
 self.addEventListener('install', e=>{
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./index.html','./manifest.json'])));
+  e.waitUntil(caches.open(CACHE).then(c=>c.addAll([
+    './','./index.html','./manifest.json','./404.html','./icon-192.png','./icon-512.png'
+  ])));
 });
 self.addEventListener('activate', e=>{ e.waitUntil(self.clients.claim()); });
 self.addEventListener('fetch', e=>{
@@ -24,17 +26,12 @@ function nextRenewal(start,cycle,customDays){
 }
 
 // IndexedDB helpers
-function idbOpen(){ return new Promise((resolve,reject)=>{
-  const req=indexedDB.open('subs-db',1);
-  req.onupgradeneeded=()=>{ const db=req.result;
-    if(!db.objectStoreNames.contains('items')) db.createObjectStore('items',{keyPath:'id'}); };
+function idbOpen(){ return new Promise((resolve,reject)=>{ const req=indexedDB.open('subs-db',1);
+  req.onupgradeneeded=()=>{ const db=req.result; if(!db.objectStoreNames.contains('items')) db.createObjectStore('items',{keyPath:'id'}) };
   req.onsuccess=()=>resolve(req.result);
   req.onerror=()=>reject(req.error);
-}); }
-function idbGetAll(db){ return new Promise((resolve,reject)=>{
-  const tx=db.transaction('items','readonly'); const st=tx.objectStore('items');
-  const req=st.getAll(); req.onsuccess=()=>resolve(req.result||[]); req.onerror=()=>reject(req.error);
-}); }
+});}
+function idbGetAll(db){ return new Promise((resolve,reject)=>{ const tx=db.transaction('items','readonly'); const st=tx.objectStore('items'); const req=st.getAll(); req.onsuccess=()=>resolve(req.result||[]); req.onerror=()=>reject(req.error); }); }
 
 async function checkAndNotify(){
   try{
@@ -55,16 +52,7 @@ async function checkAndNotify(){
     }
   }catch(e){ console.warn('SW check failed', e); }
 }
-
-// Periodic Background Sync
 self.addEventListener('periodicsync', e=>{
   if(e.tag==='check-subscriptions'){ e.waitUntil(checkAndNotify()); }
 });
-
-// Fallback: one-off sync
-self.addEventListener('sync', e=>{
-  if(e.tag==='check-subscriptions-once'){ e.waitUntil(checkAndNotify()); }
-});
-
-// Also run when SW is activated
 self.addEventListener('activate', ()=>{ checkAndNotify(); });
