@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Subscription Tracker – PWA</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6ee7ff" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Subscription Tracker</h1>
+  <div class="sub">Quản lý thuê bao Google, Apple… – PWA có thông báo nền (khi khả dụng).</div>
+
+  <div class="cap small" id="supportNote"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h3>Thêm / Sửa thuê bao</h3>
+      <div class="row">
+        <div>
+          <label>Tên dịch vụ</label>
+          <input id="name" placeholder="Ví dụ: Google One 2TB">
+        </div>
+        <div>
+          <label>Nhà cung cấp</label>
+          <input id="provider" placeholder="Google, Apple, Adobe…">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Giá mỗi kỳ</label>
+          <input id="price" type="number" step="0.01" placeholder="vd 199000">
+        </div>
+        <div>
+          <label>Tiền tệ</label>
+          <input id="currency" placeholder="VND, USD…" value="VND">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Chu kỳ thanh toán</label>
+          <select id="cycle">
+            <option value="monthly">Hàng tháng</option>
+            <option value="yearly">Hàng năm</option>
+            <option value="weekly">Hàng tuần</option>
+            <option value="custom">Tùy chỉnh (ngày)</option>
+          </select>
+        </div>
+        <div id="customDaysWrap" class="hidden">
+          <label>Số ngày mỗi kỳ</label>
+          <input id="customDays" type="number" min="1" value="30">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Ngày bắt đầu hoặc lần thanh toán gần nhất</label>
+          <input id="startDate" type="date">
+        </div>
+        <div>
+          <label>Nhắc trước (ngày)</label>
+          <input id="remindBefore" type="number" value="7" min="0">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Thẻ (tags)</label>
+          <input id="tags" placeholder="gia đình, công việc… (phân tách bởi dấu phẩy)">
+        </div>
+        <div>
+          <label>Trạng thái</label>
+          <select id="status">
+            <option value="active" selected>Đang dùng</option>
+            <option value="paused">Tạm dừng</option>
+            <option value="cancelled">Đã hủy</option>
+          </select>
+        </div>
+      </div>
+      <label>Ghi chú</label>
+      <textarea id="notes" placeholder="ID hóa đơn, email đăng ký, kênh thanh toán, gói cước…"></textarea>
+      <div class="toolbar" style="margin-top:8px">
+        <button id="saveBtn">Lưu thuê bao</button>
+        <button class="ghost" id="resetBtn">Làm mới</button>
+        <button class="ghost" id="enableNotify">Bật thông báo & lịch nền</button>
+        <span class="right small muted">Tự động tính ngày gia hạn tiếp theo</span>
+      </div>
+      <input type="hidden" id="editId" />
+    </div>
+
+    <div class="card">
+      <h3>Tiện ích</h3>
+      <div class="toolbar" style="margin-bottom:8px">
+        <input id="search" placeholder="Tìm theo tên / nhà cung cấp / tag" />
+        <select id="filterStatus">
+          <option value="all">Tất cả trạng thái</option>
+          <option value="active">Đang dùng</option>
+          <option value="paused">Tạm dừng</option>
+          <option value="cancelled">Đã hủy</option>
+        </select>
+      </div>
+      <div class="toolbar">
+        <button id="exportJSON">Xuất JSON</button>
+        <button class="ghost" id="importJSON">Nhập JSON</button>
+        <button class="ghost" id="exportCSV">Xuất CSV</button>
+        <button class="ghost" id="downloadICS">Tải lịch .ics (tất cả)</button>
+      </div>
+      <div class="small muted" style="margin-top:6px">PWA có thể nhắc nền qua Service Worker khi thiết bị hỗ trợ Periodic Background Sync (Android Chrome). Trên iOS/macOS, nên import .ics vào Calendar để chắc chắn có nhắc.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="toolbar">
+      <div class="small muted">Sắp xếp theo:</div>
+      <select id="sortBy">
+        <option value="next">Ngày gia hạn (gần nhất)</option>
+        <option value="name">Tên</option>
+        <option value="price">Giá</option>
+        <option value="provider">Nhà cung cấp</option>
+      </select>
+      <select id="sortDir">
+        <option value="asc">Tăng dần</option>
+        <option value="desc">Giảm dần</option>
+      </select>
+      <div class="right small muted nowrap" id="totals"></div>
+    </div>
+
+    <table id="table">
+      <thead>
+        <tr>
+          <th>Tên</th>
+          <th>Nhà cung cấp</th>
+          <th>Giá/kỳ</th>
+          <th>Chu kỳ</th>
+          <th>Tiến độ kỳ</th>
+          <th>Gia hạn tiếp theo</th>
+          <th>Nhắc</th>
+          <th>Thẻ</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
