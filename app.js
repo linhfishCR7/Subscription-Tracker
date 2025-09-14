@@ -14,7 +14,7 @@ const GOOGLE_CLIENT_ID = "781824072979-3q3a2946mlppep7geqrpvbhpbfbb3v44.apps.goo
 
 // Scopes
 const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
-const GCAL_SCOPE  = "https://www.googleapis.com/auth/calendar.events";
+const GCAL_SCOPE  = "https://www.googleapis.com/auth/calendar";
 
 // Tên calendar sẽ tạo/đồng bộ
 const GCAL_CAL_SUMMARY = "Subscriptions – Auto";
@@ -304,7 +304,7 @@ $('#btnCalendar').addEventListener('click', ()=>{ gcalTokenClient?.requestAccess
 /* ===== Gmail scan (gợi ý) ===== */
 async function scanGmail(){
   if(!gmailAccessToken) return alert('Chưa có Gmail access token');
-  const q = encodeURIComponent('subject:(receipt OR invoice OR subscription OR renewed) newer_than:2y');
+  const q = encodeURIComponent('subject:(receipt OR invoice OR subscription OR renewed OR Biên nhận OR biên nhận OR Billing Reminder) newer_than:2y');
   const listURL = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${q}&maxResults=50`;
   const headers = {Authorization:'Bearer '+gmailAccessToken};
   try{
