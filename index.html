@@ -582,7 +582,7 @@
 
       // Accessibility improvements
       const skipLink = document.createElement('a');
-      skipLink.href = '#main-content';
+      skipLink.href = '#mainApp';
       skipLink.className = 'skip-link';
       skipLink.textContent = 'Skip to main content';
       document.body.insertBefore(skipLink, document.body.firstChild);
@@ -590,7 +590,7 @@
       // Add main content landmark
       const wrap = document.querySelector('.wrap');
       if (wrap) {
-        wrap.id = 'main-content';
+        wrap.id = 'mainApp';
         wrap.setAttribute('role', 'main');
       }
     });
