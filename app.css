@@ -16,10 +16,11 @@
 
 body {
     margin: 0;
-    padding: 24px;
+    padding: 16px;
     background: linear-gradient(180deg, #0b0c0f, #0e1117);
     color: var(--txt);
-    font: 500 15px/1.5 system-ui, -apple-system, Segoe UI, Inter, Roboto, Arial
+    font: 500 15px/1.5 system-ui, -apple-system, Segoe UI, Inter, Roboto, Arial;
+    /* Mobile-first: smaller padding for mobile */
 }
 
 h1 {
@@ -43,7 +44,8 @@ h1 {
 }
 
 .grid.cols-2 {
-    grid-template-columns: 1.2fr 1fr
+    grid-template-columns: 1fr;
+    /* Mobile first: single column */
 }
 
 .card {
@@ -51,7 +53,14 @@ h1 {
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .25)
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+    /* Mobile-friendly touch interactions */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, .3);
 }
 
 label {
@@ -65,11 +74,15 @@ input,
 select,
 textarea {
     width: 100%;
-    padding: 10px 12px;
+    padding: 12px 14px;
     border-radius: 10px;
     border: 1px solid #2a2f3b;
     background: #0f1218;
-    color: var(--txt)
+    color: var(--txt);
+    min-height: 44px;
+    /* Better touch targets and mobile-friendly sizing */
+    font-size: 16px;
+    /* Prevents zoom on iOS */
 }
 
 textarea {
@@ -80,51 +93,87 @@ textarea {
 button {
     border: 0;
     border-radius: 10px;
-    padding: 10px 14px;
+    padding: 12px 16px;
     background: var(--pri);
     color: #06202a;
     font-weight: 800;
-    cursor: pointer
+    cursor: pointer;
+    min-height: 44px;
+    /* Improved touch targets for mobile */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 button.ghost {
     background: transparent;
     color: var(--pri);
-    border: 1px solid #2f3847
+    border: 1px solid #2f3847;
 }
 
 button.bad {
     background: var(--bad);
-    color: white
+    color: white;
+}
+
+/* Enhanced touch interactions */
+button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+button:active {
+    transform: translateY(0);
+    transition: all 0.1s ease;
+}
+
+/* Focus styles for accessibility */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 2px solid var(--pri);
+    outline-offset: 2px;
 }
 
 .row {
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap
+    gap: 12px;
+    flex-wrap: wrap;
+    /* Mobile-first: better spacing */
 }
 
 .row>* {
-    flex: 1
+    flex: 1;
+    min-width: 200px;
+    /* Prevent inputs from becoming too narrow */
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px
+    margin-top: 10px;
 }
 
 th,
 td {
-    padding: 10px;
+    padding: 12px 8px;
     border-bottom: 1px solid #202534;
     text-align: left;
-    vertical-align: top
+    vertical-align: top;
+    /* Better mobile spacing */
 }
 
 th {
     font-size: 13px;
-    color: #aeb6c6
+    color: #aeb6c6;
+}
+
+/* Table wrapper for horizontal scrolling on mobile */
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scrolling on iOS */
 }
 
 .tag {
@@ -189,11 +238,20 @@ th {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    align-items: center
+    align-items: center;
 }
 
 .toolbar input {
-    max-width: 240px
+    max-width: 240px;
+    flex: 1;
+    min-width: 150px;
+    /* Better responsive behavior */
+}
+
+/* Toolbar improvements for mobile */
+.toolbar button {
+    white-space: nowrap;
+    /* Prevent button text wrapping */
 }
 
 .right {
@@ -216,5 +274,163 @@ th {
     display: flex;
     gap: 8px;
     align-items: center;
-    margin: 10px 0
+    margin: 10px 0;
+    flex-wrap: wrap;
+    /* Allow wrapping on mobile */
+}
+
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+
+/* Mobile First - Base styles above are for mobile */
+
+/* Extra small screens - stack form rows */
+@media (max-width: 480px) {
+    .wrap {
+        max-width: none;
+        /* Use full width on mobile */
+    }
+
+    .card {
+        margin: 0 -4px;
+        /* Extend cards slightly for better mobile feel */
+        border-radius: 12px;
+    }
+    .row {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .row>* {
+        min-width: unset;
+        flex: none;
+    }
+
+    .authbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .authbar button {
+        width: 100%;
+        margin-bottom: 4px;
+        /* Better spacing between stacked buttons */
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .toolbar .right {
+        margin-left: 0;
+        text-align: center;
+        /* Center align on mobile */
+    }
+
+    .toolbar input,
+    .toolbar select {
+        max-width: none;
+    }
+
+    /* Compact table on mobile */
+    th,
+    td {
+        padding: 8px 4px;
+        font-size: 14px;
+    }
+
+    th {
+        font-size: 12px;
+    }
+
+    /* Hide less important columns on very small screens */
+    .table-wrapper table th:nth-child(4),
+    .table-wrapper table td:nth-child(4),
+    .table-wrapper table th:nth-child(7),
+    .table-wrapper table td:nth-child(7),
+    .table-wrapper table th:nth-child(8),
+    .table-wrapper table td:nth-child(8) {
+        display: none;
+    }
+}
+
+/* Small tablets and large phones (landscape) */
+@media (min-width: 576px) {
+    body {
+        padding: 20px;
+    }
+
+    .toolbar input {
+        max-width: 280px;
+    }
+
+    .row>* {
+        min-width: 150px;
+        /* Allow narrower inputs on larger screens */
+    }
+}
+
+/* Tablets */
+@media (min-width: 768px) {
+    body {
+        padding: 24px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    .toolbar input {
+        max-width: 320px;
+    }
+
+    .grid.cols-2 {
+        grid-template-columns: 1.2fr 1fr;
+        /* Two columns on tablets and up */
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    body {
+        padding: 32px;
+    }
+
+    h1 {
+        font-size: 26px;
+    }
+
+    /* Restore hover effects on desktop */
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    button:hover {
+        transform: translateY(-1px);
+    }
+}
+
+/* Mobile-specific enhancements */
+@media (hover: none) and (pointer: coarse) {
+    /* Touch devices - disable hover effects */
+    .card:hover {
+        transform: none;
+    }
+
+    button:hover {
+        transform: none;
+        opacity: 1;
+    }
+
+    /* Better touch feedback */
+    button:active {
+        background-color: var(--pri);
+        opacity: 0.8;
+    }
+
+    button.ghost:active {
+        background-color: rgba(110, 231, 255, 0.1);
+    }
 }
