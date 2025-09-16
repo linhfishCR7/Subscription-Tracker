@@ -430,17 +430,11 @@ function updateAnalyticsDashboard(list) {
   updateMetricCard('dueSoon', dueSoon, 'Due This Week');
   updateMetricCard('overdue', overdue, 'Overdue');
 
-  // Update charts with error handling
+  // Update spending chart with error handling
   try {
     updateSpendingChart(activeSubscriptions);
   } catch (error) {
     console.error('Failed to update spending chart:', error);
-  }
-
-  try {
-    updateCategoryChart(activeSubscriptions);
-  } catch (error) {
-    console.error('Failed to update category chart:', error);
   }
 }
 
@@ -805,92 +799,7 @@ function drawLineChart(ctx, data, labels, width, height) {
   }
 }
 
-function updateCategoryChart(subscriptions) {
-  const canvas = document.getElementById('categoryChart');
-  if (!canvas) {
-    console.warn('Category chart canvas element not found');
-    return;
-  }
 
-  // Verify it's actually a canvas element
-  if (!(canvas instanceof HTMLCanvasElement)) {
-    console.warn('Element with ID "categoryChart" is not a canvas element');
-    return;
-  }
-
-  try {
-    // Simple category breakdown
-    const categories = {};
-    subscriptions.forEach(sub => {
-      const tags = sub.tags || [];
-      if (tags.length === 0) {
-        categories['Other'] = (categories['Other'] || 0) + (sub.price || 0);
-      } else {
-        tags.forEach(tag => {
-          categories[tag] = (categories[tag] || 0) + (sub.price || 0);
-        });
-      }
-    });
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      console.warn('Could not get 2D context from category chart canvas');
-      return;
-    }
-
-    const width = canvas.width = canvas.offsetWidth * 2;
-    const height = canvas.height = canvas.offsetHeight * 2;
-    ctx.scale(2, 2);
-
-    drawPieChart(ctx, categories, width/2, height/2);
-  } catch (error) {
-    console.error('Error updating category chart:', error);
-  }
-}
-
-function drawPieChart(ctx, data, width, height) {
-  if (!ctx || !data || typeof data !== 'object') {
-    console.warn('Invalid parameters for drawPieChart');
-    return;
-  }
-
-  try {
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = Math.min(width, height) / 2 - 20;
-
-    const total = Object.values(data).reduce((sum, val) => sum + val, 0);
-    if (total === 0) {
-      // Draw empty state
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = '#2a2f3a';
-      ctx.font = '14px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('No data available', centerX, centerY);
-      return;
-    }
-
-    const colors = ['#4f46e5', '#7c3aed', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
-
-    ctx.clearRect(0, 0, width, height);
-
-    let currentAngle = -Math.PI / 2;
-    Object.entries(data).forEach(([, value], index) => {
-      const sliceAngle = (value / total) * Math.PI * 2;
-
-      ctx.fillStyle = colors[index % colors.length];
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
-      ctx.closePath();
-      ctx.fill();
-
-      currentAngle += sliceAngle;
-    });
-  } catch (error) {
-    console.error('Error drawing pie chart:', error);
-  }
-}
 
 /* ===== EXPORT FUNCTIONS ===== */
 async function exportCSV() {
@@ -1316,22 +1225,7 @@ if (btnLogout) {
   btnLogout.addEventListener('click', ()=>auth.signOut());
 }
 
-auth.onAuthStateChanged(async (user)=>{
-  if(user){
-    $('#btnLogin').classList.add('hidden');
-    $('#btnLogout').classList.remove('hidden');
-    $('#btnGmail').classList.remove('hidden');
-    $('#btnCalendar').classList.remove('hidden');
-    $('#userInfo').textContent = `${user.displayName||user.email||'Đã đăng nhập'}`;
-    await syncFromFirestore();
-  }else{
-    $('#btnLogin').classList.remove('hidden');
-    $('#btnLogout').classList.add('hidden');
-    $('#btnGmail').classList.add('hidden');
-    $('#btnCalendar').classList.add('hidden');
-    $('#userInfo').textContent = '';
-  }
-});
+
 
 /* ===== Gmail OAuth (GIS) ===== */
 window.addEventListener('load', ()=>{
@@ -1607,10 +1501,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Authentication state changes
   auth.onAuthStateChanged(async user => {
     if (user) {
-      $('#btnLogin')?.classList.add('hidden');
-      $('#btnLogout')?.classList.remove('hidden');
-      $('#btnGmail')?.classList.remove('hidden');
-      $('#btnCalendar')?.classList.remove('hidden');
+      // Hide login button, show logout and OAuth buttons when logged in
+      const btnLogin = $('#btnLogin');
+      const btnLogout = $('#btnLogout');
+      const btnGmail = $('#btnGmail');
+      const btnCalendar = $('#btnCalendar');
+
+      if (btnLogin) btnLogin.classList.add('hidden');
+      if (btnLogout) btnLogout.classList.remove('hidden');
+      if (btnGmail) btnGmail.classList.remove('hidden');
+      if (btnCalendar) btnCalendar.classList.remove('hidden');
+
       const userInfo = $('#userInfo');
       if (userInfo) {
         userInfo.innerHTML = `<div class="small muted">Signed in: ${user.email}</div>`;
@@ -1629,10 +1530,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }, 2000);
     } else {
-      $('#btnLogin')?.classList.remove('hidden');
-      $('#btnLogout')?.classList.add('hidden');
-      $('#btnGmail')?.classList.add('hidden');
-      $('#btnCalendar')?.classList.add('hidden');
+      // Show login button, hide logout and OAuth buttons when not logged in
+      const btnLogin = $('#btnLogin');
+      const btnLogout = $('#btnLogout');
+      const btnGmail = $('#btnGmail');
+      const btnCalendar = $('#btnCalendar');
+
+      if (btnLogin) btnLogin.classList.remove('hidden');
+      if (btnLogout) btnLogout.classList.add('hidden');
+      if (btnGmail) btnGmail.classList.add('hidden');
+      if (btnCalendar) btnCalendar.classList.add('hidden');
+
       const userInfo = $('#userInfo');
       if (userInfo) {
         userInfo.innerHTML = '';
