@@ -111,6 +111,19 @@
         <div id="userInfo" class="user-info" role="status" aria-live="polite"></div>
       </div>
       <div class="connection-status" id="supportNote" role="status" aria-live="polite"></div>
+
+      <!-- Calendar Connection Warning -->
+      <div class="calendar-warning" id="calendarWarning" style="display: none;">
+        <div class="warning-content">
+          <span class="warning-icon">⚠️</span>
+          <div class="warning-text">
+            <strong>Connect Google Calendar</strong>
+            <p>Get automatic renewal reminders by connecting your Google Calendar</p>
+          </div>
+          <button id="connectCalendarNow" class="btn-warning btn-small">Connect Now</button>
+          <button id="dismissWarning" class="btn-ghost btn-small">Dismiss</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -118,25 +131,21 @@
   <section class="card analytics-dashboard" data-tour-step="2" data-tour-title="Your Subscription Analytics" data-tour-description="Get insights into your spending patterns and upcoming renewals." style="margin-top: var(--spacing-lg);" role="region" aria-labelledby="analytics-heading">
     <h3 id="analytics-heading">📊 Analytics Overview</h3>
     <div class="analytics-grid">
-      <div class="metric-card">
-        <div class="metric-value" id="totalMonthly">$0</div>
+      <div class="metric-card" data-metric="monthlySpending">
+        <div class="metric-value">$0</div>
         <div class="metric-label">Monthly Spending</div>
-        <div class="metric-change" id="monthlyChange">—</div>
       </div>
-      <div class="metric-card">
-        <div class="metric-value" id="totalYearly">$0</div>
+      <div class="metric-card" data-metric="yearlySpending">
+        <div class="metric-value">$0</div>
         <div class="metric-label">Yearly Spending</div>
-        <div class="metric-change" id="yearlyChange">—</div>
       </div>
-      <div class="metric-card">
-        <div class="metric-value" id="activeCount">0</div>
+      <div class="metric-card" data-metric="totalSubscriptions">
+        <div class="metric-value">0</div>
         <div class="metric-label">Active Subscriptions</div>
-        <div class="metric-change" id="activeChange">—</div>
       </div>
-      <div class="metric-card">
-        <div class="metric-value" id="upcomingCount">0</div>
+      <div class="metric-card" data-metric="dueSoon">
+        <div class="metric-value">0</div>
         <div class="metric-label">Due This Week</div>
-        <div class="metric-change" id="upcomingChange">—</div>
       </div>
     </div>
 
@@ -218,151 +227,30 @@
         </div>
       </div>
 
-      <!-- Advanced Filters -->
-      <div class="filters-container">
+      <!-- Simple Status Filter -->
+      <div class="simple-filters">
         <div class="filter-group">
-          <label>Status</label>
+          <label>Status:</label>
           <select id="filterStatus" class="filter-select">
-            <option value="all">All Status</option>
+            <option value="all">All</option>
             <option value="active">Active</option>
             <option value="paused">Paused</option>
             <option value="cancelled">Cancelled</option>
           </select>
         </div>
-
-        <div class="filter-group">
-          <label>Price Range</label>
-          <select id="filterPrice" class="filter-select">
-            <option value="all">All Prices</option>
-            <option value="0-10">$0 - $10</option>
-            <option value="10-25">$10 - $25</option>
-            <option value="25-50">$25 - $50</option>
-            <option value="50+">$50+</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label>Renewal Period</label>
-          <select id="filterCycle" class="filter-select">
-            <option value="all">All Cycles</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="yearly">Yearly</option>
-            <option value="custom">Custom</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label>Due Soon</label>
-          <select id="filterDue" class="filter-select">
-            <option value="all">All Items</option>
-            <option value="overdue">Overdue</option>
-            <option value="week">Due This Week</option>
-            <option value="month">Due This Month</option>
-          </select>
-        </div>
-
-        <button id="resetFilters" class="btn-outline btn-small">Reset Filters</button>
       </div>
-
-      <!-- Quick Filter Tags -->
-      <div class="quick-filters">
-        <span class="quick-filter-label">Quick filters:</span>
-        <button class="quick-filter-tag" data-filter="expensive">💰 Expensive</button>
-        <button class="quick-filter-tag" data-filter="due-soon">⏰ Due Soon</button>
-        <button class="quick-filter-tag" data-filter="entertainment">🎬 Entertainment</button>
-        <button class="quick-filter-tag" data-filter="productivity">⚡ Productivity</button>
-      </div>
-      <!-- Professional Export & Reporting -->
+      <!-- Calendar Export -->
       <div class="export-section">
-        <h4>📊 Export & Reports</h4>
-        <div class="export-grid">
-          <div class="export-option">
-            <button id="exportJSON" class="btn-outline" aria-describedby="json-help">
-              <span class="feature-icon">📄</span>
-              Export JSON
-            </button>
-            <div id="json-help" class="export-description">Complete data backup in JSON format</div>
-          </div>
-
-          <div class="export-option">
-            <button id="exportCSV" class="btn-outline" aria-describedby="csv-help">
-              <span class="feature-icon">📊</span>
-              Export CSV
-            </button>
-            <div id="csv-help" class="export-description">Spreadsheet-compatible format</div>
-          </div>
-
-          <div class="export-option">
-            <button id="exportPDF" class="btn-outline" aria-describedby="pdf-help">
-              <span class="feature-icon">📋</span>
-              Export PDF Report
-            </button>
-            <div id="pdf-help" class="export-description">Professional report with analytics</div>
-          </div>
-
-          <div class="export-option">
-            <button id="downloadICS" class="btn-outline" aria-describedby="ics-help">
-              <span class="feature-icon">📅</span>
-              Export Calendar
-            </button>
-            <div id="ics-help" class="export-description">Import into any calendar app</div>
-          </div>
-
-          <div class="export-option">
-            <button id="importJSON" class="btn-secondary" aria-describedby="import-help">
-              <span class="feature-icon">📥</span>
-              Import Data
-            </button>
-            <div id="import-help" class="export-description">Restore from backup file</div>
-          </div>
-
-          <div class="export-option">
-            <button id="generateReport" class="btn-outline" aria-describedby="report-help">
-              <span class="feature-icon">📈</span>
-              Analytics Report
-            </button>
-            <div id="report-help" class="export-description">Detailed spending analysis</div>
-          </div>
+        <h4>📅 Export Calendar</h4>
+        <div class="export-simple">
+          <button id="downloadICS" class="btn-primary">
+            <span class="feature-icon">📅</span>
+            Export to Calendar (.ics)
+          </button>
+          <p class="export-description">Download calendar file to import renewal dates into any calendar app</p>
         </div>
       </div>
 
-      <!-- Advanced Settings -->
-      <div class="advanced-settings">
-        <details>
-          <summary>⚙️ Advanced Options</summary>
-          <div class="settings-content">
-            <div class="setting-item">
-              <label>
-                <input type="checkbox" id="includeInactive">
-                Include paused/cancelled subscriptions in exports
-              </label>
-            </div>
-            <div class="setting-item">
-              <label>
-                <input type="checkbox" id="includeTags">
-                Include tags and notes in reports
-              </label>
-            </div>
-            <div class="setting-item">
-              <label>Date Range for Reports:</label>
-              <select id="reportRange">
-                <option value="all">All Time</option>
-                <option value="year">Last 12 Months</option>
-                <option value="quarter">Last 3 Months</option>
-                <option value="month">Last Month</option>
-              </select>
-            </div>
-          </div>
-        </details>
-      </div>
-
-      <div class="sync-info">
-        <p class="text-secondary">
-          <span class="feature-icon">💡</span>
-          <strong>Pro Tip:</strong> With Google Calendar connected, your renewals sync automatically across all devices.
-        </p>
-      </div>
     </div>
   </div>
 
@@ -443,14 +331,20 @@
         <div class="summary-stats" id="totals"></div>
       </div>
     </div>
-    <div class="table-wrapper">
+    <!-- Table View -->
+    <div class="table-wrapper" id="table-container">
       <table id="table">
         <thead><tr>
-          <th>Tên</th><th>Nhà cung cấp</th><th>Giá/kỳ</th><th>Chu kỳ</th>
-          <th>Tiến độ kỳ</th><th>Gia hạn tiếp theo</th><th>Nhắc</th><th>Thẻ</th><th></th>
+          <th>Name</th><th>Provider</th><th>Price</th><th>Cycle</th>
+          <th>Progress</th><th>Next Renewal</th><th>Status</th><th>Tags</th><th>Actions</th>
         </tr></thead>
         <tbody></tbody>
       </table>
+    </div>
+
+    <!-- Card View -->
+    <div class="cards-container" id="cards-container" style="display: none;">
+      <div class="subscriptions-grid" id="subscriptions-cards"></div>
     </div>
   </div>
 </div>

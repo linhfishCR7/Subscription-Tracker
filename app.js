@@ -97,11 +97,7 @@ let bulkModeActive = false;
 function getActiveFilters() {
   return {
     search: $('#search')?.value?.toLowerCase() || '',
-    status: $('#filterStatus')?.value || 'all',
-    price: $('#filterPrice')?.value || 'all',
-    cycle: $('#filterCycle')?.value || 'all',
-    due: $('#filterDue')?.value || 'all',
-    quickFilters: Array.from(document.querySelectorAll('.quick-filter-tag.active')).map(el => el.dataset.filter)
+    status: $('#filterStatus')?.value || 'all'
   };
 }
 
@@ -121,67 +117,70 @@ function applyFilters(list, filters) {
     filtered = filtered.filter(item => (item.status || 'active') === filters.status);
   }
 
-  // Price range filter
-  if (filters.price !== 'all') {
-    const [min, max] = filters.price.split('-').map(v => v === '+' ? Infinity : parseFloat(v));
-    filtered = filtered.filter(item => {
-      const price = item.price || 0;
-      return max === undefined ? price >= min : price >= min && price <= max;
-    });
-  }
-
-  // Cycle filter
-  if (filters.cycle !== 'all') {
-    filtered = filtered.filter(item => item.cycle === filters.cycle);
-  }
-
-  // Due date filter
-  if (filters.due !== 'all') {
-    const today = new Date();
-    filtered = filtered.filter(item => {
-      if (!item.next) return false;
-      const days = daysBetween(today, item.next);
-
-      switch (filters.due) {
-        case 'overdue': return days < 0;
-        case 'week': return days >= 0 && days <= 7;
-        case 'month': return days >= 0 && days <= 30;
-        default: return true;
-      }
-    });
-  }
-
-  // Quick filters
-  filters.quickFilters.forEach(filter => {
-    switch (filter) {
-      case 'expensive':
-        filtered = filtered.filter(item => (item.price || 0) > 50);
-        break;
-      case 'due-soon':
-        filtered = filtered.filter(item => {
-          if (!item.next) return false;
-          const days = daysBetween(new Date(), item.next);
-          return days >= 0 && days <= 7;
-        });
-        break;
-      case 'entertainment':
-        filtered = filtered.filter(item => {
-          const tags = (item.tags || []).join(' ').toLowerCase();
-          const name = (item.name || '').toLowerCase();
-          return tags.includes('entertainment') || name.includes('netflix') || name.includes('spotify') || name.includes('youtube');
-        });
-        break;
-      case 'productivity':
-        filtered = filtered.filter(item => {
-          const tags = (item.tags || []).join(' ').toLowerCase();
-          const name = (item.name || '').toLowerCase();
-          return tags.includes('productivity') || name.includes('office') || name.includes('adobe') || name.includes('google');
-        });
-        break;
-    }
-  });
-
   return filtered;
+}
+
+/* ===== CARD RENDERING ===== */
+function renderCard(item, searchTerm = '') {
+  const days = item.daysLeft;
+  const pill = days == null ? '<span class="pill">—</span>' :
+    days < 0 ? `<span class="pill due">Overdue ${Math.abs(days)} days</span>` :
+    days === 0 ? '<span class="pill due">Today</span>' :
+    days <= Number(item.remindBefore || 7) ? `<span class="pill soon">${days} days left</span>` :
+    `<span class="pill ok">${days} days</span>`;
+
+  const highlightText = (text, term) => {
+    if (!term || !text) return esc(text || '');
+    const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return esc(text).replace(regex, '<mark>$1</mark>');
+  };
+
+  const statusClass = (item.status || 'active') === 'active' ? 'active' :
+                     (item.status || 'active') === 'paused' ? 'paused' : 'cancelled';
+
+  return `
+    <div class="subscription-card ${statusClass}" data-id="${item.id}">
+      <div class="card-header">
+        <div class="card-title">
+          <input type="checkbox" class="subscription-checkbox"
+                 ${selectedItems.has(item.id) ? 'checked' : ''}
+                 onchange="toggleItemSelection('${item.id}', this.checked)">
+          <h4>${highlightText(item.name, searchTerm)}</h4>
+        </div>
+        <div class="card-price">${fmtMoney(item.price, item.currency)}</div>
+      </div>
+
+      <div class="card-body">
+        <div class="card-provider">${highlightText(item.provider, searchTerm)}</div>
+        <div class="card-cycle">${cycleLabel(item.cycle, item.customDays)}</div>
+
+        <div class="card-progress">
+          <div class="progress-modern">
+            <div class="progress-modern__fill" style="width:${item.progress}%"></div>
+          </div>
+          <div class="progress-text">${item.progress}% through cycle</div>
+        </div>
+
+        <div class="card-status">
+          ${pill}
+          <span class="status-badge status-${statusClass}">${esc(item.status || 'active')}</span>
+        </div>
+
+        ${item.tags && item.tags.length > 0 ? `
+          <div class="card-tags">
+            ${item.tags.map(tag => `<span class="tag">${esc(tag)}</span>`).join('')}
+          </div>
+        ` : ''}
+
+        ${item.notes ? `<div class="card-notes">${highlightText(item.notes, searchTerm)}</div>` : ''}
+      </div>
+
+      <div class="card-actions">
+        <button onclick="editItem('${item.id}')" class="btn-ghost btn-small">Edit</button>
+        <button onclick="deleteItem('${item.id}')" class="btn-ghost btn-small btn-danger">Delete</button>
+      </div>
+    </div>
+  `;
 }
 
 /* ===== ENHANCED UI RENDER ===== */
@@ -242,6 +241,18 @@ function renderTable(list, searchTerm = '') {
 
   if (list.length === 0) {
     tbody.innerHTML = '<tr><td colspan="9" class="no-results"><p>No subscriptions found matching your criteria.</p></td></tr>';
+    return;
+  }
+
+  // Check if we're in card view
+  const activeView = document.querySelector('.view-toggle.active')?.dataset.view || 'table';
+
+  if (activeView === 'cards') {
+    const cardsContainer = $('#subscriptions-cards');
+    if (cardsContainer) {
+      cardsContainer.innerHTML = list.map(item => renderCard(item, filters.search)).join('');
+    }
+    updateSummaryStats(list, loadLocal());
     return;
   }
 
@@ -1388,12 +1399,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   setSupportNote();
   render();
 
-  // Enhanced search and filtering
+  // Simplified search and filtering
   $('#search')?.addEventListener('input', render);
   $('#filterStatus')?.addEventListener('change', render);
-  $('#filterPrice')?.addEventListener('change', render);
-  $('#filterCycle')?.addEventListener('change', render);
-  $('#filterDue')?.addEventListener('change', render);
   $('#sortBy')?.addEventListener('change', render);
   $('#sortDir')?.addEventListener('change', render);
 
@@ -1405,19 +1413,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const viewMode = this.dataset.view;
       const tableContainer = document.getElementById('table-container');
-      const cardsContainer = document.getElementById('subscriptions-cards');
+      const cardsContainer = document.getElementById('cards-container');
 
       if (viewMode === 'table') {
         if (tableContainer) tableContainer.style.display = 'block';
         if (cardsContainer) cardsContainer.style.display = 'none';
       } else {
         if (tableContainer) tableContainer.style.display = 'none';
-        if (cardsContainer) cardsContainer.style.display = 'grid';
+        if (cardsContainer) cardsContainer.style.display = 'block';
       }
 
       render();
     });
   });
+
+  // Calendar warning functionality
+  const calendarWarning = document.getElementById('calendarWarning');
+  const connectCalendarNow = document.getElementById('connectCalendarNow');
+  const dismissWarning = document.getElementById('dismissWarning');
+
+  if (connectCalendarNow) {
+    connectCalendarNow.addEventListener('click', function() {
+      // Trigger calendar connection
+      document.getElementById('btnCalendar')?.click();
+      if (calendarWarning) calendarWarning.style.display = 'none';
+    });
+  }
+
+  if (dismissWarning) {
+    dismissWarning.addEventListener('click', function() {
+      if (calendarWarning) calendarWarning.style.display = 'none';
+      localStorage.setItem('calendar-warning-dismissed', 'true');
+    });
+  }
 
   // Bulk operations
   document.getElementById('selectAll')?.addEventListener('click', toggleSelectAll);
@@ -1454,6 +1482,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       await syncFromFirestore();
       notifications.show('Successfully signed in!', 'success', 3000);
+
+      // Show calendar warning if not connected and not dismissed
+      setTimeout(() => {
+        const calendarWarning = document.getElementById('calendarWarning');
+        const isDismissed = localStorage.getItem('calendar-warning-dismissed');
+        const hasCalendarToken = gcalAccessToken !== null;
+
+        if (calendarWarning && !isDismissed && !hasCalendarToken) {
+          calendarWarning.style.display = 'block';
+        }
+      }, 2000);
     } else {
       $('#btnLogin')?.classList.remove('hidden');
       $('#btnLogout')?.classList.add('hidden');
@@ -1463,6 +1502,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (userInfo) {
         userInfo.innerHTML = '';
       }
+
+      // Hide calendar warning when signed out
+      const calendarWarning = document.getElementById('calendarWarning');
+      if (calendarWarning) calendarWarning.style.display = 'none';
     }
   });
 
