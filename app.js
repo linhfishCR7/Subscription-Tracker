@@ -27,6 +27,66 @@ const db   = firebase.firestore();
 let gmailAccessToken = null, gcalAccessToken = null;
 let gmailTokenClient = null, gcalTokenClient  = null;
 
+// Token storage keys
+const GMAIL_TOKEN_KEY = 'gmail-access-token';
+const GCAL_TOKEN_KEY = 'gcal-access-token';
+const TOKEN_EXPIRY_KEY = 'gcal-token-expiry';
+
+// Token storage functions
+function storeGCalToken(token, expiresIn = 3600) {
+  localStorage.setItem(GCAL_TOKEN_KEY, token);
+  const expiryTime = Date.now() + (expiresIn * 1000);
+  localStorage.setItem(TOKEN_EXPIRY_KEY, expiryTime.toString());
+}
+
+function getStoredGCalToken() {
+  const token = localStorage.getItem(GCAL_TOKEN_KEY);
+  const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+
+  if (!token || !expiry) return null;
+
+  // Check if token is expired (with 5 minute buffer)
+  if (Date.now() > (parseInt(expiry) - 300000)) {
+    clearStoredGCalToken();
+    return null;
+  }
+
+  return token;
+}
+
+function clearStoredGCalToken() {
+  localStorage.removeItem(GCAL_TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+}
+
+// Calendar button state management
+function updateCalendarButtonState(isConnected) {
+  const btnCalendar = document.getElementById('btnCalendar');
+  if (!btnCalendar) return;
+
+  if (isConnected) {
+    btnCalendar.innerHTML = '<span class="feature-icon" aria-hidden="true">✅</span> Connected';
+    btnCalendar.classList.add('btn-connected');
+    btnCalendar.setAttribute('data-tooltip', 'Click to disconnect Google Calendar');
+  } else {
+    btnCalendar.innerHTML = '<span class="feature-icon" aria-hidden="true">📅</span> Connect Calendar';
+    btnCalendar.classList.remove('btn-connected');
+    btnCalendar.setAttribute('data-tooltip', 'Auto-sync renewals to Google Calendar');
+  }
+}
+
+// Restore calendar token on page load
+function restoreCalendarConnection() {
+  const storedToken = getStoredGCalToken();
+  if (storedToken) {
+    gcalAccessToken = storedToken;
+    updateCalendarButtonState(true);
+    console.log('Google Calendar connection restored from storage');
+    return true;
+  }
+  return false;
+}
+
 const $  = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 const storeKey = 'subscription-tracker.v1';
@@ -1231,6 +1291,9 @@ if (btnLogout) {
 window.addEventListener('load', ()=>{
   setSupportNote(); registerSW(); render(); scheduleChecks();
 
+  // Restore calendar connection from storage
+  restoreCalendarConnection();
+
   // Token client Gmail
   gmailTokenClient = google?.accounts?.oauth2?.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
@@ -1243,7 +1306,23 @@ window.addEventListener('load', ()=>{
     client_id: GOOGLE_CLIENT_ID,
     scope: GCAL_SCOPE,
     prompt: '', // refresh im lặng nếu đã cấp
-    callback: (resp)=>{ if(resp.access_token){ gcalAccessToken=resp.access_token; alert('Đã kết nối Calendar. Mọi thay đổi sẽ tự đồng bộ.'); } }
+    callback: (resp) => {
+      if (resp.access_token) {
+        gcalAccessToken = resp.access_token;
+        // Store token persistently with expiry
+        const expiresIn = resp.expires_in || 3600; // Default 1 hour
+        storeGCalToken(resp.access_token, expiresIn);
+
+        // Update button state
+        updateCalendarButtonState(true);
+
+        // Hide calendar warning
+        const calendarWarning = document.getElementById('calendarWarning');
+        if (calendarWarning) calendarWarning.style.display = 'none';
+
+        notifications.show('Google Calendar connected successfully!', 'success', 3000);
+      }
+    }
   });
 });
 
@@ -1255,7 +1334,27 @@ if (btnGmail) {
 
 const btnCalendar = $('#btnCalendar');
 if (btnCalendar) {
-  btnCalendar.addEventListener('click', ()=>{ gcalTokenClient?.requestAccessToken({prompt:'consent'}); });
+  btnCalendar.addEventListener('click', () => {
+    if (gcalAccessToken) {
+      // Disconnect calendar
+      gcalAccessToken = null;
+      clearStoredGCalToken();
+      updateCalendarButtonState(false);
+      notifications.show('Google Calendar disconnected', 'info', 3000);
+
+      // Show calendar warning again if user is logged in
+      setTimeout(() => {
+        const calendarWarning = document.getElementById('calendarWarning');
+        const isDismissed = localStorage.getItem('calendar-warning-dismissed');
+        if (calendarWarning && !isDismissed && firebase.auth().currentUser) {
+          calendarWarning.style.display = 'block';
+        }
+      }, 1000);
+    } else {
+      // Connect calendar
+      gcalTokenClient?.requestAccessToken({prompt:'consent'});
+    }
+  });
 }
 
 /* ===== Gmail scan (gợi ý) ===== */
@@ -1523,7 +1622,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       setTimeout(() => {
         const calendarWarning = document.getElementById('calendarWarning');
         const isDismissed = localStorage.getItem('calendar-warning-dismissed');
-        const hasCalendarToken = gcalAccessToken !== null;
+        // Check both in-memory token and stored token
+        const hasCalendarToken = gcalAccessToken !== null || getStoredGCalToken() !== null;
 
         if (calendarWarning && !isDismissed && !hasCalendarToken) {
           calendarWarning.style.display = 'block';

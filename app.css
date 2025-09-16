@@ -280,6 +280,18 @@ button.btn-outline:hover {
     color: white;
 }
 
+button.btn-connected {
+    background: var(--success-color) !important;
+    color: white !important;
+    border-color: var(--success-color) !important;
+}
+
+button.btn-connected:hover {
+    background: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: white !important;
+}
+
 button.btn-danger {
     background: var(--error);
     color: white;
