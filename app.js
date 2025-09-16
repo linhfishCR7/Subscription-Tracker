@@ -14,7 +14,7 @@ const GOOGLE_CLIENT_ID = "781824072979-3q3a2946mlppep7geqrpvbhpbfbb3v44.apps.goo
 
 // Scopes
 const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
-const GCAL_SCOPE  = "https://www.googleapis.com/auth/calendar";
+const GCAL_SCOPE = "https://www.googleapis.com/auth/calendar";
 
 // Tên calendar sẽ tạo/đồng bộ
 const GCAL_CAL_SUMMARY = "Subscriptions – Auto";
@@ -22,10 +22,10 @@ const GCAL_CAL_SUMMARY = "Subscriptions – Auto";
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db   = firebase.firestore();
+const db = firebase.firestore();
 
 let gmailAccessToken = null, gcalAccessToken = null;
-let gmailTokenClient = null, gcalTokenClient  = null;
+let gmailTokenClient = null, gcalTokenClient = null;
 
 // Token storage keys
 const GMAIL_TOKEN_KEY = 'gmail-access-token';
@@ -80,47 +80,64 @@ function showOnboardingPage() {
   const onboardingPage = document.getElementById('onboardingPage');
   const mainApp = document.getElementById('mainApp');
 
+  console.log('showOnboardingPage called');
+  console.log('Onboarding page element:', onboardingPage);
+  console.log('Main app element:', mainApp);
+
   if (onboardingPage) {
     onboardingPage.classList.remove('hidden');
     onboardingPage.style.display = 'block';
+    console.log('Onboarding page shown');
+  } else {
+    console.error('Onboarding page element not found!');
   }
 
   if (mainApp) {
     mainApp.classList.add('hidden');
     mainApp.style.display = 'none';
+    console.log('Main app hidden');
+  } else {
+    console.error('Main app element not found!');
   }
 
-  console.log('Showing onboarding page');
+  console.log('Showing onboarding page - complete');
 }
 
 function showMainApp() {
   const onboardingPage = document.getElementById('onboardingPage');
   const mainApp = document.getElementById('mainApp');
 
+  console.log('showMainApp called');
+  console.log('Onboarding page element:', onboardingPage);
+  console.log('Main app element:', mainApp);
+
   if (onboardingPage) {
     onboardingPage.classList.add('hidden');
     onboardingPage.style.display = 'none';
+    console.log('Onboarding page hidden');
+  } else {
+    console.error('Onboarding page element not found!');
   }
 
   if (mainApp) {
     mainApp.classList.remove('hidden');
     mainApp.style.display = 'block';
+    console.log('Main app shown');
+  } else {
+    console.error('Main app element not found!');
   }
 
-  console.log('Showing main app');
+  console.log('Showing main app - complete');
 }
 
 // Initialize page state based on authentication
 function initializePageState() {
-  const currentUser = firebase.auth().currentUser;
+  // Don't manually check auth state here - let onAuthStateChanged handle it
+  // This prevents race conditions with Firebase initialization
+  console.log('Page initialization started - waiting for auth state...');
 
-  if (currentUser) {
-    // User is already logged in, show main app
-    showMainApp();
-  } else {
-    // User is not logged in, show onboarding
-    showOnboardingPage();
-  }
+  // Show onboarding by default until auth state is determined
+  showOnboardingPage();
 }
 
 // Restore calendar token on page load
@@ -135,65 +152,68 @@ function restoreCalendarConnection() {
   return false;
 }
 
-const $  = sel => document.querySelector(sel);
+const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 const storeKey = 'subscription-tracker.v1';
 
-function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36)}
-function parseTags(s){return (s||'').split(',').map(x=>x.trim()).filter(Boolean)}
-function fmtMoney(v,c){if(v===''||v==null)return '';try{return new Intl.NumberFormat(undefined,{style:'currency',currency:c||'VND',maximumFractionDigits:2}).format(Number(v))}catch{ return `${v} ${c||''}`.trim()}}
-function daysBetween(a,b){const MS=86400000;return Math.floor((toStartOfDay(b)-toStartOfDay(a))/MS)}
-function toStartOfDay(d){d=new Date(d);d.setHours(0,0,0,0);return d}
-function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
-function addMonths(d,n){const x=new Date(d);x.setMonth(x.getMonth()+n);return x}
-function addYears(d,n){const x=new Date(d);x.setFullYear(x.getFullYear()+n);return x}
-function nextRenewal(start,cycle,customDays){
-  if(!start) return null; let d = new Date(start); const today=toStartOfDay(new Date());
-  if(cycle==='weekly'){ while(d<=today) d=addDays(d,7); }
-  else if(cycle==='monthly'){ while(d<=today) d=addMonths(d,1); }
-  else if(cycle==='yearly'){ while(d<=today) d=addYears(d,1); }
-  else { const step=Math.max(1,Number(customDays||30)); while(d<=today) d=addDays(d,step); }
+function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36) }
+function parseTags(s) { return (s || '').split(',').map(x => x.trim()).filter(Boolean) }
+function fmtMoney(v, c) { if (v === '' || v == null) return ''; try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: c || 'VND', maximumFractionDigits: 2 }).format(Number(v)) } catch { return `${v} ${c || ''}`.trim() } }
+function daysBetween(a, b) { const MS = 86400000; return Math.floor((toStartOfDay(b) - toStartOfDay(a)) / MS) }
+function toStartOfDay(d) { d = new Date(d); d.setHours(0, 0, 0, 0); return d }
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x }
+function addMonths(d, n) { const x = new Date(d); x.setMonth(x.getMonth() + n); return x }
+function addYears(d, n) { const x = new Date(d); x.setFullYear(x.getFullYear() + n); return x }
+function nextRenewal(start, cycle, customDays) {
+  if (!start) return null; let d = new Date(start); const today = toStartOfDay(new Date());
+  if (cycle === 'weekly') { while (d <= today) d = addDays(d, 7); }
+  else if (cycle === 'monthly') { while (d <= today) d = addMonths(d, 1); }
+  else if (cycle === 'yearly') { while (d <= today) d = addYears(d, 1); }
+  else { const step = Math.max(1, Number(customDays || 30)); while (d <= today) d = addDays(d, step); }
   return d;
 }
-function cycleLabel(c,cd){return c==='custom'?`${cd||30} ngày`:c==='weekly'?'Tuần':c==='monthly'?'Tháng':c==='yearly'?'Năm':c}
-function pctProgress(start,next,cycle,customDays){
-  if(!start||!next) return 0;
-  const total=(cycle==='weekly'?7:cycle==='monthly'?30:cycle==='yearly'?365:Math.max(1,Number(customDays||30)));
+function cycleLabel(c, cd) { return c === 'custom' ? `${cd || 30} ngày` : c === 'weekly' ? 'Tuần' : c === 'monthly' ? 'Tháng' : c === 'yearly' ? 'Năm' : c }
+function pctProgress(start, next, cycle, customDays) {
+  if (!start || !next) return 0;
+  const total = (cycle === 'weekly' ? 7 : cycle === 'monthly' ? 30 : cycle === 'yearly' ? 365 : Math.max(1, Number(customDays || 30)));
   const elapsed = total - Math.max(0, daysBetween(new Date(), next));
-  return Math.max(0, Math.min(100, Math.round(100*elapsed/total)));
+  return Math.max(0, Math.min(100, Math.round(100 * elapsed / total)));
 }
 
 /* ===== LocalStorage + IDB (mirror cho SW) ===== */
-function loadLocal(){ try{ return JSON.parse(localStorage.getItem(storeKey)||'[]') }catch{ return [] } }
-function saveLocal(list){ localStorage.setItem(storeKey, JSON.stringify(list)); idbSetAll(list); }
+function loadLocal() { try { return JSON.parse(localStorage.getItem(storeKey) || '[]') } catch { return [] } }
+function saveLocal(list) { localStorage.setItem(storeKey, JSON.stringify(list)); idbSetAll(list); }
 
 const IDB = {
-  db:null,
-  open(){ return new Promise((ok,err)=>{ const r=indexedDB.open('subs-db',1);
-    r.onupgradeneeded=()=>{ const db=r.result; if(!db.objectStoreNames.contains('items')) db.createObjectStore('items',{keyPath:'id'}) };
-    r.onsuccess=()=>{IDB.db=r.result; ok()}; r.onerror=()=>err(r.error);
-  }); },
-  put(val){ return new Promise((ok,err)=>{ const tx=IDB.db.transaction('items','readwrite'); tx.objectStore('items').put(val); tx.oncomplete=()=>ok(); tx.onerror=()=>err(tx.error); }); },
-  clear(){ return new Promise((ok,err)=>{ const tx=IDB.db.transaction('items','readwrite'); tx.objectStore('items').clear(); tx.oncomplete=()=>ok(); tx.onerror=()=>err(tx.error); }); }
+  db: null,
+  open() {
+    return new Promise((ok, err) => {
+      const r = indexedDB.open('subs-db', 1);
+      r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('items')) db.createObjectStore('items', { keyPath: 'id' }) };
+      r.onsuccess = () => { IDB.db = r.result; ok() }; r.onerror = () => err(r.error);
+    });
+  },
+  put(val) { return new Promise((ok, err) => { const tx = IDB.db.transaction('items', 'readwrite'); tx.objectStore('items').put(val); tx.oncomplete = () => ok(); tx.onerror = () => err(tx.error); }); },
+  clear() { return new Promise((ok, err) => { const tx = IDB.db.transaction('items', 'readwrite'); tx.objectStore('items').clear(); tx.oncomplete = () => ok(); tx.onerror = () => err(tx.error); }); }
 };
-async function idbSetAll(list){ try{ if(!('indexedDB' in window)) return; if(!IDB.db) await IDB.open(); await IDB.clear(); for(const it of list) await IDB.put(it); }catch(e){ console.warn('IDB mirror failed', e);} }
+async function idbSetAll(list) { try { if (!('indexedDB' in window)) return; if (!IDB.db) await IDB.open(); await IDB.clear(); for (const it of list) await IDB.put(it); } catch (e) { console.warn('IDB mirror failed', e); } }
 
 /* ===== Firestore sync ===== */
-async function syncFromFirestore(){
-  if(!auth.currentUser) return;
+async function syncFromFirestore() {
+  if (!auth.currentUser) return;
   const uid = auth.currentUser.uid;
   const snap = await db.collection("users").doc(uid).collection("subscriptions").get();
-  const list = snap.docs.map(d=>d.data());
+  const list = snap.docs.map(d => d.data());
   saveLocal(list);
   render();
 }
-async function upsertToFirestore(item){
-  if(!auth.currentUser) return;
+async function upsertToFirestore(item) {
+  if (!auth.currentUser) return;
   const uid = auth.currentUser.uid;
   await db.collection("users").doc(uid).collection("subscriptions").doc(item.id).set(item);
 }
-async function deleteFromFirestore(id){
-  if(!auth.currentUser) return;
+async function deleteFromFirestore(id) {
+  if (!auth.currentUser) return;
   const uid = auth.currentUser.uid;
   await db.collection("users").doc(uid).collection("subscriptions").doc(id).delete();
 }
@@ -233,9 +253,9 @@ function renderCard(item, searchTerm = '') {
   const days = item.daysLeft;
   const pill = days == null ? '<span class="pill">—</span>' :
     days < 0 ? `<span class="pill due">Overdue ${Math.abs(days)} days</span>` :
-    days === 0 ? '<span class="pill due">Today</span>' :
-    days <= Number(item.remindBefore || 7) ? `<span class="pill soon">${days} days left</span>` :
-    `<span class="pill ok">${days} days</span>`;
+      days === 0 ? '<span class="pill due">Today</span>' :
+        days <= Number(item.remindBefore || 7) ? `<span class="pill soon">${days} days left</span>` :
+          `<span class="pill ok">${days} days</span>`;
 
   const highlightText = (text, term) => {
     if (!term || !text) return esc(text || '');
@@ -244,7 +264,7 @@ function renderCard(item, searchTerm = '') {
   };
 
   const statusClass = (item.status || 'active') === 'active' ? 'active' :
-                     (item.status || 'active') === 'paused' ? 'paused' : 'cancelled';
+    (item.status || 'active') === 'paused' ? 'paused' : 'cancelled';
 
   return `
     <div class="subscription-card ${statusClass}" data-id="${item.id}">
@@ -292,7 +312,7 @@ function renderCard(item, searchTerm = '') {
 }
 
 /* ===== ENHANCED UI RENDER ===== */
-function render(){
+function render() {
   const filters = getActiveFilters();
   let list = loadLocal();
 
@@ -368,9 +388,9 @@ function renderTable(list, searchTerm = '') {
     const days = item.daysLeft;
     const pill = days == null ? '<span class="pill">—</span>' :
       days < 0 ? `<span class="pill due">Overdue ${Math.abs(days)} days</span>` :
-      days === 0 ? '<span class="pill due">Today</span>' :
-      days <= Number(item.remindBefore || 7) ? `<span class="pill soon">${days} days left</span>` :
-      `<span class="pill ok">${days} days</span>`;
+        days === 0 ? '<span class="pill due">Today</span>' :
+          days <= Number(item.remindBefore || 7) ? `<span class="pill soon">${days} days left</span>` :
+            `<span class="pill ok">${days} days</span>`;
 
     const tr = document.createElement('tr');
     tr.className = selectedItems.has(item.id) ? 'subscription-row selected' : 'subscription-row';
@@ -437,8 +457,8 @@ function renderCards(list, searchTerm = '') {
     const days = item.daysLeft;
     const statusClass = days == null ? 'unknown' :
       days < 0 ? 'overdue' :
-      days === 0 ? 'due-today' :
-      days <= Number(item.remindBefore || 7) ? 'due-soon' : 'ok';
+        days === 0 ? 'due-today' :
+          days <= Number(item.remindBefore || 7) ? 'due-soon' : 'ok';
 
     const card = document.createElement('div');
     card.className = `subscription-card ${selectedItems.has(item.id) ? 'selected' : ''}`;
@@ -465,8 +485,8 @@ function renderCards(list, searchTerm = '') {
         </div>
         <div class="card-due ${statusClass}">
           ${days == null ? 'No due date' :
-            days < 0 ? `Overdue ${Math.abs(days)} days` :
-            days === 0 ? 'Due today' :
+        days < 0 ? `Overdue ${Math.abs(days)} days` :
+          days === 0 ? 'Due today' :
             `${days} days left`}
         </div>
         ${item.tags && item.tags.length > 0 ? `
@@ -492,7 +512,7 @@ function renderCards(list, searchTerm = '') {
   });
 }
 
-function esc(s){return (s||'').replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function esc(s) { return (s || '').replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[m])) }
 
 /* ===== ANALYTICS DASHBOARD ===== */
 function updateAnalyticsDashboard(list) {
@@ -511,8 +531,8 @@ function updateAnalyticsDashboard(list) {
   activeSubscriptions.forEach(item => {
     const price = Number(item.price || 0);
     const factor = item.cycle === 'weekly' ? 4.345 :
-                   item.cycle === 'yearly' ? 1/12 :
-                   item.cycle === 'custom' ? (30 / (Number(item.customDays || 30))) : 1;
+      item.cycle === 'yearly' ? 1 / 12 :
+        item.cycle === 'custom' ? (30 / (Number(item.customDays || 30))) : 1;
     totalMonthly += price * factor;
     totalYearly += price * factor * 12;
   });
@@ -571,8 +591,8 @@ function updateSummaryStats(filteredList, allList) {
   allList.forEach(item => {
     if ((item.status || 'active') === 'active') {
       const factor = item.cycle === 'weekly' ? 4.345 :
-                     item.cycle === 'yearly' ? 1/12 :
-                     item.cycle === 'custom' ? (30 / (Number(item.customDays || 30))) : 1;
+        item.cycle === 'yearly' ? 1 / 12 :
+          item.cycle === 'custom' ? (30 / (Number(item.customDays || 30))) : 1;
       totalMonthly += Number(item.price || 0) * factor;
     }
   });
@@ -830,15 +850,15 @@ function updateSpendingChart(subscriptions) {
       subscriptions.forEach(sub => {
         const price = Number(sub.price || 0);
         const factor = sub.cycle === 'weekly' ? 4.345 :
-                       sub.cycle === 'yearly' ? 1/12 :
-                       sub.cycle === 'custom' ? (30 / (Number(sub.customDays || 30))) : 1;
+          sub.cycle === 'yearly' ? 1 / 12 :
+            sub.cycle === 'custom' ? (30 / (Number(sub.customDays || 30))) : 1;
         monthlyTotal += price * factor;
       });
       data.push(monthlyTotal);
     }
 
     // Simple line chart
-    drawLineChart(ctx, data, months, width/2, height/2);
+    drawLineChart(ctx, data, months, width / 2, height / 2);
   } catch (error) {
     console.error('Error updating spending chart:', error);
   }
@@ -982,8 +1002,8 @@ async function exportPDF() {
       if ((item.status || 'active') === 'active') {
         const price = Number(item.price || 0);
         const factor = item.cycle === 'weekly' ? 4.345 :
-                       item.cycle === 'yearly' ? 1/12 :
-                       item.cycle === 'custom' ? (30 / (Number(item.customDays || 30))) : 1;
+          item.cycle === 'yearly' ? 1 / 12 :
+            item.cycle === 'custom' ? (30 / (Number(item.customDays || 30))) : 1;
         totalMonthly += price * factor;
         totalYearly += price * factor * 12;
       }
@@ -1075,8 +1095,8 @@ function generatePDFReport(subscriptions, analytics) {
         </thead>
         <tbody>
           ${subscriptions.map(item => {
-            item.next = nextRenewal(item.startDate, item.cycle, item.customDays);
-            return `
+    item.next = nextRenewal(item.startDate, item.cycle, item.customDays);
+    return `
               <tr>
                 <td>${esc(item.name || '')}</td>
                 <td>${esc(item.provider || '')}</td>
@@ -1086,7 +1106,7 @@ function generatePDFReport(subscriptions, analytics) {
                 <td class="status-${item.status || 'active'}">${item.status || 'active'}</td>
               </tr>
             `;
-          }).join('')}
+  }).join('')}
         </tbody>
       </table>
     </body>
@@ -1110,7 +1130,7 @@ function downloadFile(content, filename, mimeType) {
 // Form event listeners with null checks
 const cycleSelect = $('#cycle');
 if (cycleSelect) {
-  cycleSelect.addEventListener('change',()=>{
+  cycleSelect.addEventListener('change', () => {
     const customDaysWrap = $('#customDaysWrap');
     if (customDaysWrap) {
       customDaysWrap.classList.toggle('hidden', cycleSelect.value !== 'custom');
@@ -1120,39 +1140,39 @@ if (cycleSelect) {
 
 const saveBtn = $('#saveBtn');
 if (saveBtn) {
-  saveBtn.addEventListener('click', async ()=>{
-  const id=$('#editId').value||uid();
-  let item={
-    id,
-    name:$('#name').value.trim(),
-    provider:$('#provider').value.trim(),
-    price:Number($('#price').value||0),
-    currency:$('#currency').value.trim()||'VND',
-    cycle:$('#cycle').value,
-    customDays:Number($('#customDays').value||30),
-    startDate:$('#startDate').value?new Date($('#startDate').value).toISOString():null,
-    remindBefore:Number($('#remindBefore').value||7),
-    tags:parseTags($('#tags').value),
-    status:$('#status').value,
-    notes:$('#notes').value.trim(),
-    gcalEventId: (loadLocal().find(x=>x.id===id)||{}).gcalEventId || null,
-    gcalCalendarId: (loadLocal().find(x=>x.id===id)||{}).gcalCalendarId || null
-  };
-  if(!item.name) return alert('Vui lòng nhập tên dịch vụ');
-  if(!item.startDate) return alert('Chọn ngày bắt đầu/lần thanh toán gần nhất');
+  saveBtn.addEventListener('click', async () => {
+    const id = $('#editId').value || uid();
+    let item = {
+      id,
+      name: $('#name').value.trim(),
+      provider: $('#provider').value.trim(),
+      price: Number($('#price').value || 0),
+      currency: $('#currency').value.trim() || 'VND',
+      cycle: $('#cycle').value,
+      customDays: Number($('#customDays').value || 30),
+      startDate: $('#startDate').value ? new Date($('#startDate').value).toISOString() : null,
+      remindBefore: Number($('#remindBefore').value || 7),
+      tags: parseTags($('#tags').value),
+      status: $('#status').value,
+      notes: $('#notes').value.trim(),
+      gcalEventId: (loadLocal().find(x => x.id === id) || {}).gcalEventId || null,
+      gcalCalendarId: (loadLocal().find(x => x.id === id) || {}).gcalCalendarId || null
+    };
+    if (!item.name) return alert('Vui lòng nhập tên dịch vụ');
+    if (!item.startDate) return alert('Chọn ngày bắt đầu/lần thanh toán gần nhất');
 
-  const list=loadLocal(); const idx=list.findIndex(x=>x.id===id);
-  if(idx>-1) list[idx]=item; else list.push(item);
-  saveLocal(list); render();
+    const list = loadLocal(); const idx = list.findIndex(x => x.id === id);
+    if (idx > -1) list[idx] = item; else list.push(item);
+    saveLocal(list); render();
 
-  try{
-    await upsertToFirestore(item);
-    if(gcalAccessToken){
-      const updated = await syncItemToCalendar(item);
-      if(updated){ item = {...item, ...updated}; await upsertToFirestore(item); const list2=loadLocal().map(x=>x.id===item.id?item:x); saveLocal(list2); render(); }
-    }
-  }catch(e){ console.warn('Save/Sync error', e); }
-  clearForm();
+    try {
+      await upsertToFirestore(item);
+      if (gcalAccessToken) {
+        const updated = await syncItemToCalendar(item);
+        if (updated) { item = { ...item, ...updated }; await upsertToFirestore(item); const list2 = loadLocal().map(x => x.id === item.id ? item : x); saveLocal(list2); render(); }
+      }
+    } catch (e) { console.warn('Save/Sync error', e); }
+    clearForm();
   });
 }
 
@@ -1161,44 +1181,44 @@ const resetBtn = $('#resetBtn');
 if (resetBtn) {
   resetBtn.addEventListener('click', clearForm);
 }
-function clearForm(){
-  $('#editId').value='';
-  ['name','provider','price','currency','customDays','startDate','remindBefore','tags','notes'].forEach(id=>$('#'+id).value='');
-  $('#currency').value='VND'; $('#cycle').value='monthly'; $('#status').value='active';
+function clearForm() {
+  $('#editId').value = '';
+  ['name', 'provider', 'price', 'currency', 'customDays', 'startDate', 'remindBefore', 'tags', 'notes'].forEach(id => $('#' + id).value = '');
+  $('#currency').value = 'VND'; $('#cycle').value = 'monthly'; $('#status').value = 'active';
   $('#customDaysWrap').classList.add('hidden');
 }
-function editItem(id){
-  const it=loadLocal().find(x=>x.id===id); if(!it) return;
-  $('#editId').value=it.id; $('#name').value=it.name||''; $('#provider').value=it.provider||'';
-  $('#price').value=it.price||''; $('#currency').value=it.currency||'VND';
-  $('#cycle').value=it.cycle||'monthly'; $('#customDays').value=it.customDays||30;
-  $('#customDaysWrap').classList.toggle('hidden', it.cycle!=='custom');
-  $('#startDate').value=it.startDate?new Date(it.startDate).toISOString().slice(0,10):'';
-  $('#remindBefore').value=it.remindBefore||7; $('#tags').value=(it.tags||[]).join(', ');
-  $('#status').value=it.status||'active'; $('#notes').value=it.notes||'';
-  window.scrollTo({top:0,behavior:'smooth'});
+function editItem(id) {
+  const it = loadLocal().find(x => x.id === id); if (!it) return;
+  $('#editId').value = it.id; $('#name').value = it.name || ''; $('#provider').value = it.provider || '';
+  $('#price').value = it.price || ''; $('#currency').value = it.currency || 'VND';
+  $('#cycle').value = it.cycle || 'monthly'; $('#customDays').value = it.customDays || 30;
+  $('#customDaysWrap').classList.toggle('hidden', it.cycle !== 'custom');
+  $('#startDate').value = it.startDate ? new Date(it.startDate).toISOString().slice(0, 10) : '';
+  $('#remindBefore').value = it.remindBefore || 7; $('#tags').value = (it.tags || []).join(', ');
+  $('#status').value = it.status || 'active'; $('#notes').value = it.notes || '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-async function delItem(id){
-  if(!confirm('Xóa thuê bao này?')) return;
-  const it = loadLocal().find(x=>x.id===id);
-  const list=loadLocal().filter(x=>x.id!==id); saveLocal(list); render();
-  try{
+async function delItem(id) {
+  if (!confirm('Xóa thuê bao này?')) return;
+  const it = loadLocal().find(x => x.id === id);
+  const list = loadLocal().filter(x => x.id !== id); saveLocal(list); render();
+  try {
     await deleteFromFirestore(id);
-    if(gcalAccessToken && it?.gcalCalendarId && it?.gcalEventId){
+    if (gcalAccessToken && it?.gcalCalendarId && it?.gcalEventId) {
       await gcalDeleteEvent(it.gcalCalendarId, it.gcalEventId);
     }
-  }catch(e){ console.warn('Delete/Sync error',e); }
+  } catch (e) { console.warn('Delete/Sync error', e); }
 }
 
 /* ===== Import/Export ===== */
 // Export JSON functionality (removed from UI but kept for potential future use)
 const exportJSONBtn = $('#exportJSON');
 if (exportJSONBtn) {
-  exportJSONBtn.addEventListener('click',()=>{
-    const blob=new Blob([JSON.stringify(loadLocal(),null,2)],{type:'application/json'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='subscriptions.json';
+  exportJSONBtn.addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(loadLocal(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'subscriptions.json';
     a.click();
     URL.revokeObjectURL(a.href);
   });
@@ -1207,35 +1227,35 @@ if (exportJSONBtn) {
 // Import JSON functionality (removed from UI but kept for potential future use)
 const importJSONBtn = $('#importJSON');
 if (importJSONBtn) {
-  importJSONBtn.addEventListener('click',()=>{
-    const inp=document.createElement('input');
-    inp.type='file';
-    inp.accept='.json,application/json';
-    inp.onchange=async()=>{
-      const f=inp.files[0];
-      if(!f) return;
-      const r=new FileReader();
-      r.onload=async()=>{
-        try{
-          const data=JSON.parse(r.result);
-          if(Array.isArray(data)){
+  importJSONBtn.addEventListener('click', () => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.json,application/json';
+    inp.onchange = async () => {
+      const f = inp.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = async () => {
+        try {
+          const data = JSON.parse(r.result);
+          if (Array.isArray(data)) {
             saveLocal(data);
             render();
-            if(auth.currentUser){
-              for(const it of data){
+            if (auth.currentUser) {
+              for (const it of data) {
                 await upsertToFirestore(it);
-                if(gcalAccessToken){
+                if (gcalAccessToken) {
                   const updated = await syncItemToCalendar(it);
-                  if(updated){
-                    const list=loadLocal().map(x=>x.id===it.id?{...it,...updated}:x);
+                  if (updated) {
+                    const list = loadLocal().map(x => x.id === it.id ? { ...it, ...updated } : x);
                     saveLocal(list);
-                    await upsertToFirestore({...it,...updated});
+                    await upsertToFirestore({ ...it, ...updated });
                   }
                 }
               }
             }
           } else alert('Tệp không hợp lệ');
-        }catch(e){
+        } catch (e) {
           alert('Không đọc được JSON')
         }
       };
@@ -1248,98 +1268,99 @@ if (importJSONBtn) {
 // Export CSV functionality (removed from UI but kept for potential future use)
 const exportCSVBtn = $('#exportCSV');
 if (exportCSVBtn) {
-  exportCSVBtn.addEventListener('click',()=>{
-    const list=loadLocal();
-    const header=['name','provider','price','currency','cycle','customDays','startDate','remindBefore','tags','status','notes'];
-    const rows=[header.join(',')].concat(list.map(it=> header.map(k=>{
-      let v=it[k];
-      if(Array.isArray(v)) v=v.join('|');
-      if(v==null) v='';
-      return '"'+String(v).replace(/"/g,'""')+'"';
+  exportCSVBtn.addEventListener('click', () => {
+    const list = loadLocal();
+    const header = ['name', 'provider', 'price', 'currency', 'cycle', 'customDays', 'startDate', 'remindBefore', 'tags', 'status', 'notes'];
+    const rows = [header.join(',')].concat(list.map(it => header.map(k => {
+      let v = it[k];
+      if (Array.isArray(v)) v = v.join('|');
+      if (v == null) v = '';
+      return '"' + String(v).replace(/"/g, '""') + '"';
     }).join(',')));
-    const blob=new Blob([rows.join('\n')],{type:'text/csv'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='subscriptions.csv';
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'subscriptions.csv';
     a.click();
     URL.revokeObjectURL(a.href);
   });
 }
 
 /* ===== iCal (giữ lại, nhưng Calendar đã tự sync) ===== */
-function icsEscape(s){return String(s||'').replace(/[\\,;]/g,'\\$&').replace(/\n/g,'\\n')}
-function pad(n){return (n<10?'0':'')+n}
-function fmtICSDate(d){const y=d.getFullYear(),m=pad(d.getMonth()+1),da=pad(d.getDate());return `${y}${m}${da}`;}
-function makeICSForItem(it){ const next=nextRenewal(it.startDate,it.cycle,it.customDays); if(!next) return ''; let rrule=''; if(it.cycle==='weekly') rrule='RRULE:FREQ=WEEKLY'; else if(it.cycle==='monthly') rrule='RRULE:FREQ=MONTHLY'; else if(it.cycle==='yearly') rrule='RRULE:FREQ=YEARLY'; else rrule=`RRULE:FREQ=DAILY;INTERVAL=${Math.max(1,Number(it.customDays||30))}`; const dt=fmtICSDate(next); const alarmDays=Math.max(0,Number(it.remindBefore||7)); const trigger=`TRIGGER:-P${alarmDays}D`; const uidStr=it.id+'@subscription-tracker'; const title=`Gia hạn: ${it.name}`; const desc=`Nhà cung cấp: ${it.provider||''}\\nGiá/kỳ: ${it.price||''} ${it.currency||''}\\nChu kỳ: ${cycleLabel(it.cycle,it.customDays)}\\nGhi chú: ${icsEscape(it.notes||'')}`; return ['BEGIN:VEVENT',`UID:${uidStr}`,`DTSTAMP:${fmtICSDate(new Date())}T000000`,`SUMMARY:${icsEscape(title)}`,`DESCRIPTION:${desc}`,`DTSTART;VALUE=DATE:${dt}`,rrule,'BEGIN:VALARM',trigger,'ACTION:DISPLAY',`DESCRIPTION:${icsEscape(title)}`,'END:VALARM','END:VEVENT'].join('\n'); }
-function downloadICSFor(id){ const it=loadLocal().find(x=>x.id===id); if(!it) return; const body=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Subscription Tracker//EN',makeICSForItem(it),'END:VCALENDAR'].join('\n'); const blob=new Blob([body],{type:'text/calendar'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${(it.name||'subscription')}.ics`; a.click(); URL.revokeObjectURL(a.href); }
+function icsEscape(s) { return String(s || '').replace(/[\\,;]/g, '\\$&').replace(/\n/g, '\\n') }
+function pad(n) { return (n < 10 ? '0' : '') + n }
+function fmtICSDate(d) { const y = d.getFullYear(), m = pad(d.getMonth() + 1), da = pad(d.getDate()); return `${y}${m}${da}`; }
+function makeICSForItem(it) { const next = nextRenewal(it.startDate, it.cycle, it.customDays); if (!next) return ''; let rrule = ''; if (it.cycle === 'weekly') rrule = 'RRULE:FREQ=WEEKLY'; else if (it.cycle === 'monthly') rrule = 'RRULE:FREQ=MONTHLY'; else if (it.cycle === 'yearly') rrule = 'RRULE:FREQ=YEARLY'; else rrule = `RRULE:FREQ=DAILY;INTERVAL=${Math.max(1, Number(it.customDays || 30))}`; const dt = fmtICSDate(next); const alarmDays = Math.max(0, Number(it.remindBefore || 7)); const trigger = `TRIGGER:-P${alarmDays}D`; const uidStr = it.id + '@subscription-tracker'; const title = `Gia hạn: ${it.name}`; const desc = `Nhà cung cấp: ${it.provider || ''}\\nGiá/kỳ: ${it.price || ''} ${it.currency || ''}\\nChu kỳ: ${cycleLabel(it.cycle, it.customDays)}\\nGhi chú: ${icsEscape(it.notes || '')}`; return ['BEGIN:VEVENT', `UID:${uidStr}`, `DTSTAMP:${fmtICSDate(new Date())}T000000`, `SUMMARY:${icsEscape(title)}`, `DESCRIPTION:${desc}`, `DTSTART;VALUE=DATE:${dt}`, rrule, 'BEGIN:VALARM', trigger, 'ACTION:DISPLAY', `DESCRIPTION:${icsEscape(title)}`, 'END:VALARM', 'END:VEVENT'].join('\n'); }
+function downloadICSFor(id) { const it = loadLocal().find(x => x.id === id); if (!it) return; const body = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Subscription Tracker//EN', makeICSForItem(it), 'END:VCALENDAR'].join('\n'); const blob = new Blob([body], { type: 'text/calendar' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${(it.name || 'subscription')}.ics`; a.click(); URL.revokeObjectURL(a.href); }
 // Calendar export functionality (kept in simplified UI)
 const downloadICSBtn = $('#downloadICS');
 if (downloadICSBtn) {
-  downloadICSBtn.addEventListener('click',()=>{
-    const items=loadLocal();
-    const events=items.map(makeICSForItem).filter(Boolean).join('\n');
-    const body=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Subscription Tracker//EN',events,'END:VCALENDAR'].join('\n');
-    const blob=new Blob([body],{type:'text/calendar'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='subscriptions.ics';
+  downloadICSBtn.addEventListener('click', () => {
+    const items = loadLocal();
+    const events = items.map(makeICSForItem).filter(Boolean).join('\n');
+    const body = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Subscription Tracker//EN', events, 'END:VCALENDAR'].join('\n');
+    const blob = new Blob([body], { type: 'text/calendar' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'subscriptions.ics';
     a.click();
     URL.revokeObjectURL(a.href);
   });
 }
 
 /* ===== PWA / Notifications ===== */
-function setSupportNote(){
-  const okSW='serviceWorker' in navigator;
-  const okNot='Notification' in window;
-  let msg = `SW: ${okSW?'OK':'Không'} • Notifications: ${okNot?'OK':'Không'}`;
+function setSupportNote() {
+  const okSW = 'serviceWorker' in navigator;
+  const okNot = 'Notification' in window;
+  let msg = `SW: ${okSW ? 'OK' : 'Không'} • Notifications: ${okNot ? 'OK' : 'Không'}`;
   msg += `\nĐã có Google Calendar: sự kiện/nhắc sẽ đồng bộ qua cloud trên mọi thiết bị.`;
-  $('#supportNote').textContent=msg;
+  $('#supportNote').textContent = msg;
 }
-async function registerSW(){ if(!('serviceWorker' in navigator)) return; try{ await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready; }catch(e){ console.error('SW register failed',e); } }
+async function registerSW() { if (!('serviceWorker' in navigator)) return; try { await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready; } catch (e) { console.error('SW register failed', e); } }
 // Enable notifications functionality with null check
 const enableNotifyBtn = $('#enableNotify');
 if (enableNotifyBtn) {
-  enableNotifyBtn.addEventListener('click', async ()=>{
-    if(!('Notification' in window)) return alert('Trình duyệt không hỗ trợ Notification API');
+  enableNotifyBtn.addEventListener('click', async () => {
+    if (!('Notification' in window)) return alert('Trình duyệt không hỗ trợ Notification API');
     const perm = await Notification.requestPermission();
-    if(perm!=='granted') return alert('Bạn đã từ chối thông báo');
+    if (perm !== 'granted') return alert('Bạn đã từ chối thông báo');
     await registerSW();
     const reg = await navigator.serviceWorker.ready;
-    if('periodicSync' in reg){
-      try{ await reg.periodicSync.register('check-subscriptions',{minInterval:12*60*60*1000}); alert('Đã bật nhắc nền (Periodic Background Sync)'); }
-      catch(e){ console.warn('PBS failed',e); alert('Thiết bị không bật được nhắc nền. Không sao, đã có Google Calendar nhắc qua cloud.'); }
+    if ('periodicSync' in reg) {
+      try { await reg.periodicSync.register('check-subscriptions', { minInterval: 12 * 60 * 60 * 1000 }); alert('Đã bật nhắc nền (Periodic Background Sync)'); }
+      catch (e) { console.warn('PBS failed', e); alert('Thiết bị không bật được nhắc nền. Không sao, đã có Google Calendar nhắc qua cloud.'); }
     } else {
       alert('Thiết bị không hỗ trợ Periodic Background Sync. Không sao, đã có Google Calendar nhắc qua cloud.');
     }
   });
 }
-function scheduleChecks(){ try{ checkDue(); }catch{} setInterval(()=>{ try{ checkDue(); }catch{} }, 60*60*1000); }
-function checkDue(){ if(!('Notification' in window)||Notification.permission!=='granted') return; const list=loadLocal(); const today=toStartOfDay(new Date()); list.forEach(it=>{ if((it.status||'active')!=='active') return; const next=nextRenewal(it.startDate,it.cycle,it.customDays); if(!next) return; const days=daysBetween(today,next); const threshold=Number(it.remindBefore||7); const key='notified-'+it.id+'-'+next.toISOString().slice(0,10); if(days<=threshold){ if(sessionStorage.getItem(key)) return; new Notification('Sắp đến hạn: '+(it.name||'Thuê bao'),{ body:`${it.provider||''} • còn ${days<0?('quá '+Math.abs(days)):days} ngày • ${next.toLocaleDateString()}`}); sessionStorage.setItem(key,'1'); } }); }
+function scheduleChecks() { try { checkDue(); } catch { } setInterval(() => { try { checkDue(); } catch { } }, 60 * 60 * 1000); }
+function checkDue() { if (!('Notification' in window) || Notification.permission !== 'granted') return; const list = loadLocal(); const today = toStartOfDay(new Date()); list.forEach(it => { if ((it.status || 'active') !== 'active') return; const next = nextRenewal(it.startDate, it.cycle, it.customDays); if (!next) return; const days = daysBetween(today, next); const threshold = Number(it.remindBefore || 7); const key = 'notified-' + it.id + '-' + next.toISOString().slice(0, 10); if (days <= threshold) { if (sessionStorage.getItem(key)) return; new Notification('Sắp đến hạn: ' + (it.name || 'Thuê bao'), { body: `${it.provider || ''} • còn ${days < 0 ? ('quá ' + Math.abs(days)) : days} ngày • ${next.toLocaleDateString()}` }); sessionStorage.setItem(key, '1'); } }); }
 
 /* ===== Auth ===== */
 // Login and logout buttons with null checks
 const btnLogin = $('#btnLogin');
 if (btnLogin) {
-  btnLogin.addEventListener('click', async ()=>{
-    const provider=new firebase.auth.GoogleAuthProvider();
+  btnLogin.addEventListener('click', async () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
     provider.addScope('profile'); provider.addScope('email');
-    try{ await auth.signInWithPopup(provider); }catch(e){ alert('Login lỗi: '+e.message); }
+    try { await auth.signInWithPopup(provider); } catch (e) { alert('Login lỗi: ' + e.message); }
   });
 }
 
 const btnLogout = $('#btnLogout');
 if (btnLogout) {
-  btnLogout.addEventListener('click', ()=>auth.signOut());
+  btnLogout.addEventListener('click', () => auth.signOut());
 }
 
 
 
 /* ===== Gmail OAuth (GIS) ===== */
-window.addEventListener('load', ()=>{
+window.addEventListener('load', () => {
   setSupportNote(); registerSW(); render(); scheduleChecks();
 
   // Initialize page state - show onboarding by default
+  console.log('Window loaded, initializing page state...');
   initializePageState();
 
   // Restore calendar connection from storage
@@ -1349,7 +1370,7 @@ window.addEventListener('load', ()=>{
   gmailTokenClient = google?.accounts?.oauth2?.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
     scope: GMAIL_SCOPE,
-    callback: (resp)=>{ if(resp.access_token){ gmailAccessToken=resp.access_token; scanGmail(); } }
+    callback: (resp) => { if (resp.access_token) { gmailAccessToken = resp.access_token; scanGmail(); } }
   });
 
   // Token client Calendar
@@ -1421,7 +1442,7 @@ if (ctaLoginBtn) {
 // Gmail and Calendar OAuth buttons with null checks
 const btnGmail = $('#btnGmail');
 if (btnGmail) {
-  btnGmail.addEventListener('click', ()=>{ gmailTokenClient?.requestAccessToken({prompt:'consent'}); });
+  btnGmail.addEventListener('click', () => { gmailTokenClient?.requestAccessToken({ prompt: 'consent' }); });
 }
 
 const btnCalendar = $('#btnCalendar');
@@ -1444,39 +1465,39 @@ if (btnCalendar) {
       }, 1000);
     } else {
       // Connect calendar
-      gcalTokenClient?.requestAccessToken({prompt:'consent'});
+      gcalTokenClient?.requestAccessToken({ prompt: 'consent' });
     }
   });
 }
 
 /* ===== Gmail scan (gợi ý) ===== */
-async function scanGmail(){
-  if(!gmailAccessToken) return alert('Chưa có Gmail access token');
+async function scanGmail() {
+  if (!gmailAccessToken) return alert('Chưa có Gmail access token');
   const q = encodeURIComponent('subject:(receipt OR invoice OR subscription OR renewed OR Biên nhận OR biên nhận OR Billing Reminder) newer_than:2y');
   const listURL = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${q}&maxResults=50`;
-  const headers = {Authorization:'Bearer '+gmailAccessToken};
-  try{
-    const listRes = await fetch(listURL,{headers}); const listData = await listRes.json();
-    if(!listData.messages?.length) return alert('Không tìm thấy email nào phù hợp');
+  const headers = { Authorization: 'Bearer ' + gmailAccessToken };
+  try {
+    const listRes = await fetch(listURL, { headers }); const listData = await listRes.json();
+    if (!listData.messages?.length) return alert('Không tìm thấy email nào phù hợp');
     const suggestions = [];
-    for(const m of listData.messages.slice(0,20)){
-      const msgRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${m.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,{headers});
+    for (const m of listData.messages.slice(0, 20)) {
+      const msgRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${m.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`, { headers });
       const msg = await msgRes.json();
-      const hdrs = (msg.payload?.headers||[]);
-      const H = n => hdrs.find(h=>h.name===n)?.value || '';
+      const hdrs = (msg.payload?.headers || []);
+      const H = n => hdrs.find(h => h.name === n)?.value || '';
       const from = H('From'), subject = H('Subject'), date = H('Date');
       const provider = guessProvider(from, subject);
       const name = guessName(subject, provider);
       const startDateISO = new Date(date).toISOString();
-      if(provider || /subscription|renew/i.test(subject)){
-        suggestions.push({id: msg.id, name, provider, startDate: startDateISO});
+      if (provider || /subscription|renew/i.test(subject)) {
+        suggestions.push({ id: msg.id, name, provider, startDate: startDateISO });
       }
     }
-    if(!suggestions.length) return alert('Chưa phát hiện được gói nào từ email.');
-    const list = loadLocal(); let added=0;
-    for(const s of suggestions){
-      const id = 'gmail-'+s.id;
-      if(list.find(x=>x.id===id)) continue;
+    if (!suggestions.length) return alert('Chưa phát hiện được gói nào từ email.');
+    const list = loadLocal(); let added = 0;
+    for (const s of suggestions) {
+      const id = 'gmail-' + s.id;
+      if (list.find(x => x.id === id)) continue;
       const item = {
         id,
         name: s.name || s.provider || 'Subscription',
@@ -1485,116 +1506,116 @@ async function scanGmail(){
         cycle: 'monthly', customDays: 30,
         startDate: s.startDate, remindBefore: 7,
         tags: ['gmail-scan'], status: 'active',
-        notes: `Gợi ý từ Gmail: ${s.provider||''} / ${s.name||''}`,
+        notes: `Gợi ý từ Gmail: ${s.provider || ''} / ${s.name || ''}`,
         gcalEventId: null, gcalCalendarId: null
       };
       list.push(item);
       await upsertToFirestore(item);
-      if(gcalAccessToken){ const updated = await syncItemToCalendar(item); if(updated){ Object.assign(item, updated); await upsertToFirestore(item); } }
+      if (gcalAccessToken) { const updated = await syncItemToCalendar(item); if (updated) { Object.assign(item, updated); await upsertToFirestore(item); } }
       added++;
     }
     saveLocal(list); render();
     alert(`Đã gợi ý thêm ${added} mục (tag: gmail-scan). Hãy cập nhật giá/chu kỳ cho chính xác.`);
-  }catch(e){ console.error(e); alert('Lỗi khi đọc Gmail: '+(e.message||e)); }
+  } catch (e) { console.error(e); alert('Lỗi khi đọc Gmail: ' + (e.message || e)); }
 }
-function guessProvider(from, subject){
-  const all = (from+' '+subject).toLowerCase();
-  const map = ['google','apple','netflix','spotify','adobe','microsoft','canva','dropbox','evernote','1password','notion','openai','github','zoom','slack','atlassian','amazon','hbo','disney','icloud','youtube'];
-  return map.find(k=> all.includes(k)) || '';
+function guessProvider(from, subject) {
+  const all = (from + ' ' + subject).toLowerCase();
+  const map = ['google', 'apple', 'netflix', 'spotify', 'adobe', 'microsoft', 'canva', 'dropbox', 'evernote', '1password', 'notion', 'openai', 'github', 'zoom', 'slack', 'atlassian', 'amazon', 'hbo', 'disney', 'icloud', 'youtube'];
+  return map.find(k => all.includes(k)) || '';
 }
-function guessName(subject, provider){
-  subject = (subject||'').replace(/\[.*?\]/g,'').trim();
-  if(provider) return provider.charAt(0).toUpperCase()+provider.slice(1)+' Subscription';
+function guessName(subject, provider) {
+  subject = (subject || '').replace(/\[.*?\]/g, '').trim();
+  if (provider) return provider.charAt(0).toUpperCase() + provider.slice(1) + ' Subscription';
   return subject.split('|')[0].split('-')[0].trim();
 }
 
 /* ===== Google Calendar integration ===== */
-function getStoredCalId(){ return localStorage.getItem('gcal.calendarId') || null; }
-function setStoredCalId(id){ localStorage.setItem('gcal.calendarId', id); }
+function getStoredCalId() { return localStorage.getItem('gcal.calendarId') || null; }
+function setStoredCalId(id) { localStorage.setItem('gcal.calendarId', id); }
 
-async function ensureGCalToken(){
-  if(gcalAccessToken) return;
-  await gcalTokenClient?.requestAccessToken({prompt:''});
-  if(!gcalAccessToken) throw new Error('Chưa kết nối Calendar');
+async function ensureGCalToken() {
+  if (gcalAccessToken) return;
+  await gcalTokenClient?.requestAccessToken({ prompt: '' });
+  if (!gcalAccessToken) throw new Error('Chưa kết nối Calendar');
 }
 
-async function ensureCalendarId(){
+async function ensureCalendarId() {
   await ensureGCalToken();
-  const headers = {Authorization:'Bearer '+gcalAccessToken,'Content-Type':'application/json'};
+  const headers = { Authorization: 'Bearer ' + gcalAccessToken, 'Content-Type': 'application/json' };
   let calId = getStoredCalId();
-  if(calId){
-    const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}`, {headers});
-    if(res.ok) return calId;
+  if (calId) {
+    const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}`, { headers });
+    if (res.ok) return calId;
   }
-  const listRes = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=owner', {headers});
+  const listRes = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=owner', { headers });
   const listData = await listRes.json();
-  const found = (listData.items||[]).find(c=> (c.summary||'') === GCAL_CAL_SUMMARY);
-  if(found){ setStoredCalId(found.id); return found.id; }
+  const found = (listData.items || []).find(c => (c.summary || '') === GCAL_CAL_SUMMARY);
+  if (found) { setStoredCalId(found.id); return found.id; }
 
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   const createRes = await fetch('https://www.googleapis.com/calendar/v3/calendars', {
-    method:'POST', headers, body: JSON.stringify({summary: GCAL_CAL_SUMMARY, timeZone: tz})
+    method: 'POST', headers, body: JSON.stringify({ summary: GCAL_CAL_SUMMARY, timeZone: tz })
   });
   const created = await createRes.json();
-  if(!createRes.ok) throw new Error('Không tạo được Calendar: '+(created.error?.message||createRes.status));
+  if (!createRes.ok) throw new Error('Không tạo được Calendar: ' + (created.error?.message || createRes.status));
   setStoredCalId(created.id);
   return created.id;
 }
 
-function toISODateOnly(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
-function rruleForItem(it){
-  if(it.cycle==='weekly') return 'RRULE:FREQ=WEEKLY';
-  if(it.cycle==='monthly') return 'RRULE:FREQ=MONTHLY';
-  if(it.cycle==='yearly') return 'RRULE:FREQ=YEARLY';
-  const n = Math.max(1, Number(it.customDays||30));
+function toISODateOnly(d) { const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0'); return `${y}-${m}-${day}`; }
+function rruleForItem(it) {
+  if (it.cycle === 'weekly') return 'RRULE:FREQ=WEEKLY';
+  if (it.cycle === 'monthly') return 'RRULE:FREQ=MONTHLY';
+  if (it.cycle === 'yearly') return 'RRULE:FREQ=YEARLY';
+  const n = Math.max(1, Number(it.customDays || 30));
   return `RRULE:FREQ=DAILY;INTERVAL=${n}`;
 }
-function buildEventFor(it){
+function buildEventFor(it) {
   const next = nextRenewal(it.startDate, it.cycle, it.customDays);
   const start = next ? toISODateOnly(next) : toISODateOnly(new Date());
-  const end   = toISODateOnly(addDays(new Date(start),1)); // all-day
-  const remindMin = Math.max(0, Number(it.remindBefore||7)) * 1440;
+  const end = toISODateOnly(addDays(new Date(start), 1)); // all-day
+  const remindMin = Math.max(0, Number(it.remindBefore || 7)) * 1440;
   return {
     summary: `Gia hạn: ${it.name}`,
-    description: `Nhà cung cấp: ${it.provider||''}\nGiá/kỳ: ${it.price||''} ${it.currency||''}\nChu kỳ: ${cycleLabel(it.cycle,it.customDays)}\nGhi chú: ${it.notes||''}`,
+    description: `Nhà cung cấp: ${it.provider || ''}\nGiá/kỳ: ${it.price || ''} ${it.currency || ''}\nChu kỳ: ${cycleLabel(it.cycle, it.customDays)}\nGhi chú: ${it.notes || ''}`,
     start: { date: start },
-    end:   { date: end   },
-    recurrence: [ rruleForItem(it) ],
+    end: { date: end },
+    recurrence: [rruleForItem(it)],
     reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: remindMin }] }
   };
 }
-async function gcalUpsertEvent(calendarId, it){
-  const headers = {Authorization:'Bearer '+gcalAccessToken,'Content-Type':'application/json'};
+async function gcalUpsertEvent(calendarId, it) {
+  const headers = { Authorization: 'Bearer ' + gcalAccessToken, 'Content-Type': 'application/json' };
   const body = buildEventFor(it);
-  if(it.gcalEventId){
+  if (it.gcalEventId) {
     const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(it.gcalEventId)}`, {
-      method:'PATCH', headers, body: JSON.stringify(body)
+      method: 'PATCH', headers, body: JSON.stringify(body)
     });
-    if(res.ok){ const ev = await res.json(); return {eventId: ev.id}; }
+    if (res.ok) { const ev = await res.json(); return { eventId: ev.id }; }
   }
   const ins = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`, {
-    method:'POST', headers, body: JSON.stringify(body)
+    method: 'POST', headers, body: JSON.stringify(body)
   });
-  if(!ins.ok){ const err=await ins.json().catch(()=>({})); throw new Error('Calendar insert fail: '+(err.error?.message||ins.status)); }
+  if (!ins.ok) { const err = await ins.json().catch(() => ({})); throw new Error('Calendar insert fail: ' + (err.error?.message || ins.status)); }
   const ev = await ins.json();
-  return {eventId: ev.id};
+  return { eventId: ev.id };
 }
-async function gcalDeleteEvent(calendarId, eventId){
-  try{
+async function gcalDeleteEvent(calendarId, eventId) {
+  try {
     await ensureGCalToken();
-    const headers = {Authorization:'Bearer '+gcalAccessToken};
+    const headers = { Authorization: 'Bearer ' + gcalAccessToken };
     await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`, {
-      method:'DELETE', headers
+      method: 'DELETE', headers
     });
-  }catch(e){ console.warn('gcalDeleteEvent', e); }
+  } catch (e) { console.warn('gcalDeleteEvent', e); }
 }
-async function syncItemToCalendar(it){
-  try{
+async function syncItemToCalendar(it) {
+  try {
     await ensureGCalToken();
     const calId = await ensureCalendarId();
-    const {eventId} = await gcalUpsertEvent(calId, it);
+    const { eventId } = await gcalUpsertEvent(calId, it);
     return { gcalEventId: eventId, gcalCalendarId: calId };
-  }catch(e){
+  } catch (e) {
     console.warn('syncItemToCalendar failed', e);
     return null;
   }
@@ -1613,7 +1634,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // View toggle buttons
   document.querySelectorAll('.view-toggle').forEach(btn => {
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', function () {
       document.querySelectorAll('.view-toggle').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
 
@@ -1639,7 +1660,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const dismissWarning = document.getElementById('dismissWarning');
 
   if (connectCalendarNow) {
-    connectCalendarNow.addEventListener('click', function() {
+    connectCalendarNow.addEventListener('click', function () {
       // Trigger calendar connection
       document.getElementById('btnCalendar')?.click();
       if (calendarWarning) calendarWarning.style.display = 'none';
@@ -1647,7 +1668,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (dismissWarning) {
-    dismissWarning.addEventListener('click', function() {
+    dismissWarning.addEventListener('click', function () {
       if (calendarWarning) calendarWarning.style.display = 'none';
       localStorage.setItem('calendar-warning-dismissed', 'true');
     });
@@ -1682,73 +1703,80 @@ document.addEventListener('DOMContentLoaded', async () => {
   const quickFilterTags = document.querySelectorAll('.quick-filter-tag');
   if (quickFilterTags.length > 0) {
     quickFilterTags.forEach(tag => {
-      tag.addEventListener('click', function() {
+      tag.addEventListener('click', function () {
         this.classList.toggle('active');
         render();
       });
     });
   }
 
-  // Authentication state changes
-  auth.onAuthStateChanged(async user => {
-    if (user) {
-      // Hide onboarding page, show main app
-      showMainApp();
+  // Authentication state changes - ensure DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM ready, setting up auth state listener...');
 
-      // Hide login button, show logout and OAuth buttons when logged in
-      const btnLogin = $('#btnLogin');
-      const btnLogout = $('#btnLogout');
-      const btnGmail = $('#btnGmail');
-      const btnCalendar = $('#btnCalendar');
+    auth.onAuthStateChanged(async user => {
+      console.log('Auth state changed:', user ? `User logged in: ${user.email}` : 'User logged out');
 
-      if (btnLogin) btnLogin.classList.add('hidden');
-      if (btnLogout) btnLogout.classList.remove('hidden');
-      if (btnGmail) btnGmail.classList.remove('hidden');
-      if (btnCalendar) btnCalendar.classList.remove('hidden');
+      if (user) {
+        // Hide onboarding page, show main app
+        console.log('Transitioning to main app...');
+        showMainApp();
 
-      const userInfo = $('#userInfo');
-      if (userInfo) {
-        userInfo.innerHTML = `<div class="small muted">Signed in: ${user.email}</div>`;
-      }
-      await syncFromFirestore();
-      notifications.show('Successfully signed in!', 'success', 3000);
+        // Hide login button, show logout and OAuth buttons when logged in
+        const btnLogin = $('#btnLogin');
+        const btnLogout = $('#btnLogout');
+        const btnGmail = $('#btnGmail');
+        const btnCalendar = $('#btnCalendar');
 
-      // Show calendar warning if not connected and not dismissed
-      setTimeout(() => {
-        const calendarWarning = document.getElementById('calendarWarning');
-        const isDismissed = localStorage.getItem('calendar-warning-dismissed');
-        // Check both in-memory token and stored token
-        const hasCalendarToken = gcalAccessToken !== null || getStoredGCalToken() !== null;
+        if (btnLogin) btnLogin.classList.add('hidden');
+        if (btnLogout) btnLogout.classList.remove('hidden');
+        if (btnGmail) btnGmail.classList.remove('hidden');
+        if (btnCalendar) btnCalendar.classList.remove('hidden');
 
-        if (calendarWarning && !isDismissed && !hasCalendarToken) {
-          calendarWarning.style.display = 'block';
+        const userInfo = $('#userInfo');
+        if (userInfo) {
+          userInfo.innerHTML = `<div class="small muted">Signed in: ${user.email}</div>`;
         }
-      }, 2000);
-    } else {
-      // Show onboarding page, hide main app
-      showOnboardingPage();
+        await syncFromFirestore();
+        notifications.show('Successfully signed in!', 'success', 3000);
 
-      // Show login button, hide logout and OAuth buttons when not logged in
-      const btnLogin = $('#btnLogin');
-      const btnLogout = $('#btnLogout');
-      const btnGmail = $('#btnGmail');
-      const btnCalendar = $('#btnCalendar');
+        // Show calendar warning if not connected and not dismissed
+        setTimeout(() => {
+          const calendarWarning = document.getElementById('calendarWarning');
+          const isDismissed = localStorage.getItem('calendar-warning-dismissed');
+          // Check both in-memory token and stored token
+          const hasCalendarToken = gcalAccessToken !== null || getStoredGCalToken() !== null;
 
-      if (btnLogin) btnLogin.classList.remove('hidden');
-      if (btnLogout) btnLogout.classList.add('hidden');
-      if (btnGmail) btnGmail.classList.add('hidden');
-      if (btnCalendar) btnCalendar.classList.add('hidden');
+          if (calendarWarning && !isDismissed && !hasCalendarToken) {
+            calendarWarning.style.display = 'block';
+          }
+        }, 2000);
+      } else {
+        // Show onboarding page, hide main app
+        showOnboardingPage();
 
-      const userInfo = $('#userInfo');
-      if (userInfo) {
-        userInfo.innerHTML = '';
+        // Show login button, hide logout and OAuth buttons when not logged in
+        const btnLogin = $('#btnLogin');
+        const btnLogout = $('#btnLogout');
+        const btnGmail = $('#btnGmail');
+        const btnCalendar = $('#btnCalendar');
+
+        if (btnLogin) btnLogin.classList.remove('hidden');
+        if (btnLogout) btnLogout.classList.add('hidden');
+        if (btnGmail) btnGmail.classList.add('hidden');
+        if (btnCalendar) btnCalendar.classList.add('hidden');
+
+        const userInfo = $('#userInfo');
+        if (userInfo) {
+          userInfo.innerHTML = '';
+        }
+
+        // Hide calendar warning when signed out
+        const calendarWarning = document.getElementById('calendarWarning');
+        if (calendarWarning) calendarWarning.style.display = 'none';
       }
-
-      // Hide calendar warning when signed out
-      const calendarWarning = document.getElementById('calendarWarning');
-      if (calendarWarning) calendarWarning.style.display = 'none';
-    }
-  });
+    });
+  }); // End DOMContentLoaded
 
   // Initialize charts after a short delay to ensure elements are rendered
   setTimeout(() => {
@@ -1768,7 +1796,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // Enhanced delete confirmation
-window.delItem = async function(id) {
+window.delItem = async function (id) {
   const item = loadLocal().find(x => x.id === id);
   if (!item) return;
 

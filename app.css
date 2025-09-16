@@ -1343,7 +1343,7 @@ th {
     border-color: var(--accent-primary);
 }
 
-.feature-icon {
+.onboarding-page .feature-icon {
     font-size: 3rem;
     margin-bottom: var(--spacing-lg);
     display: block;
