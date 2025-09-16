@@ -1344,7 +1344,15 @@ if (btnLogin) {
   btnLogin.addEventListener('click', async () => {
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.addScope('profile'); provider.addScope('email');
-    try { await auth.signInWithPopup(provider); } catch (e) { alert('Login lỗi: ' + e.message); }
+    try {
+      // Mark this as a new login session
+      sessionStorage.setItem('just-logged-in', 'true');
+      await auth.signInWithPopup(provider);
+    } catch (e) {
+      // Clear the session flag on error
+      sessionStorage.removeItem('just-logged-in');
+      alert('Login lỗi: ' + e.message);
+    }
   });
 }
 
@@ -1398,45 +1406,104 @@ window.addEventListener('load', () => {
   });
 });
 
-// Onboarding login buttons
-const heroLoginBtn = document.getElementById('heroLoginBtn');
-if (heroLoginBtn) {
-  heroLoginBtn.addEventListener('click', async () => {
-    try {
-      // Show loading state
-      heroLoginBtn.disabled = true;
-      heroLoginBtn.innerHTML = '<span class="btn-icon">⏳</span> Signing in...';
+// Dynamic button state management
+function updateOnboardingButtons(isLoggedIn, user = null) {
+  console.log('Updating onboarding buttons, isLoggedIn:', isLoggedIn, 'user:', user?.email);
 
-      await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-    } catch (error) {
-      console.error('Login error:', error);
-      notifications.show('Login failed. Please try again.', 'error', 5000);
+  const heroLoginBtn = document.getElementById('heroLoginBtn');
+  const ctaLoginBtn = document.getElementById('ctaLoginBtn');
 
-      // Reset button state
+  if (heroLoginBtn) {
+    if (isLoggedIn) {
+      // User is already logged in - show "Enter App" button
+      heroLoginBtn.innerHTML = '<span class="btn-icon">🚀</span> Enter App';
+      heroLoginBtn.onclick = () => {
+        console.log('Enter App clicked - transitioning to main app');
+        showMainApp();
+      };
       heroLoginBtn.disabled = false;
+    } else {
+      // User not logged in - show "Get Started with Google" button
       heroLoginBtn.innerHTML = '<span class="btn-icon">🚀</span> Get Started with Google';
+      heroLoginBtn.onclick = async () => {
+        try {
+          console.log('Get Started clicked - initiating login');
+          heroLoginBtn.disabled = true;
+          heroLoginBtn.innerHTML = '<span class="btn-icon">⏳</span> Signing in...';
+
+          // Mark this as a new login session
+          sessionStorage.setItem('just-logged-in', 'true');
+
+          const provider = new firebase.auth.GoogleAuthProvider();
+          provider.addScope('profile');
+          provider.addScope('email');
+          await auth.signInWithPopup(provider);
+        } catch (error) {
+          console.error('Login error:', error);
+          notifications.show('Login failed. Please try again.', 'error', 5000);
+
+          // Clear the session flag on error
+          sessionStorage.removeItem('just-logged-in');
+
+          // Reset button state
+          heroLoginBtn.disabled = false;
+          heroLoginBtn.innerHTML = '<span class="btn-icon">🚀</span> Get Started with Google';
+        }
+      };
+      heroLoginBtn.disabled = false;
     }
-  });
+  }
+
+  if (ctaLoginBtn) {
+    if (isLoggedIn) {
+      // User is already logged in - show "Go to App" button
+      ctaLoginBtn.innerHTML = '<span class="btn-icon">📱</span> Go to App';
+      ctaLoginBtn.onclick = () => {
+        console.log('Go to App clicked - transitioning to main app');
+        showMainApp();
+      };
+      ctaLoginBtn.disabled = false;
+    } else {
+      // User not logged in - show "Sign in with Google" button
+      ctaLoginBtn.innerHTML = '<span class="btn-icon">🔐</span> Sign in with Google';
+      ctaLoginBtn.onclick = async () => {
+        try {
+          console.log('Sign in clicked - initiating login');
+          ctaLoginBtn.disabled = true;
+          ctaLoginBtn.innerHTML = '<span class="btn-icon">⏳</span> Signing in...';
+
+          // Mark this as a new login session
+          sessionStorage.setItem('just-logged-in', 'true');
+
+          const provider = new firebase.auth.GoogleAuthProvider();
+          provider.addScope('profile');
+          provider.addScope('email');
+          await auth.signInWithPopup(provider);
+        } catch (error) {
+          console.error('Login error:', error);
+          notifications.show('Login failed. Please try again.', 'error', 5000);
+
+          // Clear the session flag on error
+          sessionStorage.removeItem('just-logged-in');
+
+          // Reset button state
+          ctaLoginBtn.disabled = false;
+          ctaLoginBtn.innerHTML = '<span class="btn-icon">🔐</span> Sign in with Google';
+        }
+      };
+      ctaLoginBtn.disabled = false;
+    }
+  }
 }
 
+// Initialize onboarding buttons on page load
+const heroLoginBtn = document.getElementById('heroLoginBtn');
 const ctaLoginBtn = document.getElementById('ctaLoginBtn');
-if (ctaLoginBtn) {
-  ctaLoginBtn.addEventListener('click', async () => {
-    try {
-      // Show loading state
-      ctaLoginBtn.disabled = true;
-      ctaLoginBtn.innerHTML = '<span class="btn-icon">⏳</span> Signing in...';
 
-      await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-    } catch (error) {
-      console.error('Login error:', error);
-      notifications.show('Login failed. Please try again.', 'error', 5000);
-
-      // Reset button state
-      ctaLoginBtn.disabled = false;
-      ctaLoginBtn.innerHTML = '<span class="btn-icon">🔐</span> Sign in with Google';
-    }
-  });
+// Set initial state (will be updated by auth state listener)
+if (heroLoginBtn || ctaLoginBtn) {
+  console.log('Initializing onboarding buttons...');
+  updateOnboardingButtons(false); // Start with logged out state
 }
 
 // Gmail and Calendar OAuth buttons with null checks
@@ -1718,9 +1785,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.log('Auth state changed:', user ? `User logged in: ${user.email}` : 'User logged out');
 
       if (user) {
-        // Hide onboarding page, show main app
-        console.log('Transitioning to main app...');
-        showMainApp();
+        // User is logged in
+        console.log('User authenticated - setting up logged in state...');
+
+        // Update onboarding buttons to show "Enter App" / "Go to App"
+        updateOnboardingButtons(true, user);
+
+        // Check if this is a new login or returning user
+        const isNewLogin = sessionStorage.getItem('just-logged-in') === 'true';
+
+        if (isNewLogin) {
+          console.log('New login detected - showing brief transition with updated buttons');
+          // Clear the session flag
+          sessionStorage.removeItem('just-logged-in');
+
+          // Show updated buttons briefly, then auto-transition
+          setTimeout(() => {
+            console.log('Auto-transitioning new user to main app...');
+            showMainApp();
+          }, 1500);
+        } else {
+          console.log('Returning user detected - automatically showing main app');
+          showMainApp();
+        }
 
         // Hide login button, show logout and OAuth buttons when logged in
         const btnLogin = $('#btnLogin');
@@ -1737,8 +1824,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (userInfo) {
           userInfo.innerHTML = `<div class="small muted">Signed in: ${user.email}</div>`;
         }
-        await syncFromFirestore();
-        notifications.show('Successfully signed in!', 'success', 3000);
+
+        // Sync data from Firestore
+        try {
+          await syncFromFirestore();
+          console.log('Data synced from Firestore successfully');
+        } catch (error) {
+          console.error('Error syncing from Firestore:', error);
+        }
+
+        // Show success notification for new logins only
+        if (isNewLogin) {
+          notifications.show('Successfully signed in!', 'success', 3000);
+        }
 
         // Show calendar warning if not connected and not dismissed
         setTimeout(() => {
@@ -1752,6 +1850,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }, 2000);
       } else {
+        // User is not logged in
+        console.log('User not authenticated - setting up logged out state...');
+
+        // Update onboarding buttons to show login options
+        updateOnboardingButtons(false);
+
         // Show onboarding page, hide main app
         showOnboardingPage();
 
