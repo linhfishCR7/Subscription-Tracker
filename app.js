@@ -75,6 +75,54 @@ function updateCalendarButtonState(isConnected) {
   }
 }
 
+// Onboarding/Main App visibility management
+function showOnboardingPage() {
+  const onboardingPage = document.getElementById('onboardingPage');
+  const mainApp = document.getElementById('mainApp');
+
+  if (onboardingPage) {
+    onboardingPage.classList.remove('hidden');
+    onboardingPage.style.display = 'block';
+  }
+
+  if (mainApp) {
+    mainApp.classList.add('hidden');
+    mainApp.style.display = 'none';
+  }
+
+  console.log('Showing onboarding page');
+}
+
+function showMainApp() {
+  const onboardingPage = document.getElementById('onboardingPage');
+  const mainApp = document.getElementById('mainApp');
+
+  if (onboardingPage) {
+    onboardingPage.classList.add('hidden');
+    onboardingPage.style.display = 'none';
+  }
+
+  if (mainApp) {
+    mainApp.classList.remove('hidden');
+    mainApp.style.display = 'block';
+  }
+
+  console.log('Showing main app');
+}
+
+// Initialize page state based on authentication
+function initializePageState() {
+  const currentUser = firebase.auth().currentUser;
+
+  if (currentUser) {
+    // User is already logged in, show main app
+    showMainApp();
+  } else {
+    // User is not logged in, show onboarding
+    showOnboardingPage();
+  }
+}
+
 // Restore calendar token on page load
 function restoreCalendarConnection() {
   const storedToken = getStoredGCalToken();
@@ -1291,6 +1339,9 @@ if (btnLogout) {
 window.addEventListener('load', ()=>{
   setSupportNote(); registerSW(); render(); scheduleChecks();
 
+  // Initialize page state - show onboarding by default
+  initializePageState();
+
   // Restore calendar connection from storage
   restoreCalendarConnection();
 
@@ -1325,6 +1376,47 @@ window.addEventListener('load', ()=>{
     }
   });
 });
+
+// Onboarding login buttons
+const heroLoginBtn = document.getElementById('heroLoginBtn');
+if (heroLoginBtn) {
+  heroLoginBtn.addEventListener('click', async () => {
+    try {
+      // Show loading state
+      heroLoginBtn.disabled = true;
+      heroLoginBtn.innerHTML = '<span class="btn-icon">⏳</span> Signing in...';
+
+      await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    } catch (error) {
+      console.error('Login error:', error);
+      notifications.show('Login failed. Please try again.', 'error', 5000);
+
+      // Reset button state
+      heroLoginBtn.disabled = false;
+      heroLoginBtn.innerHTML = '<span class="btn-icon">🚀</span> Get Started with Google';
+    }
+  });
+}
+
+const ctaLoginBtn = document.getElementById('ctaLoginBtn');
+if (ctaLoginBtn) {
+  ctaLoginBtn.addEventListener('click', async () => {
+    try {
+      // Show loading state
+      ctaLoginBtn.disabled = true;
+      ctaLoginBtn.innerHTML = '<span class="btn-icon">⏳</span> Signing in...';
+
+      await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    } catch (error) {
+      console.error('Login error:', error);
+      notifications.show('Login failed. Please try again.', 'error', 5000);
+
+      // Reset button state
+      ctaLoginBtn.disabled = false;
+      ctaLoginBtn.innerHTML = '<span class="btn-icon">🔐</span> Sign in with Google';
+    }
+  });
+}
 
 // Gmail and Calendar OAuth buttons with null checks
 const btnGmail = $('#btnGmail');
@@ -1600,6 +1692,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Authentication state changes
   auth.onAuthStateChanged(async user => {
     if (user) {
+      // Hide onboarding page, show main app
+      showMainApp();
+
       // Hide login button, show logout and OAuth buttons when logged in
       const btnLogin = $('#btnLogin');
       const btnLogout = $('#btnLogout');
@@ -1630,6 +1725,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }, 2000);
     } else {
+      // Show onboarding page, hide main app
+      showOnboardingPage();
+
       // Show login button, hide logout and OAuth buttons when not logged in
       const btnLogin = $('#btnLogin');
       const btnLogout = $('#btnLogout');

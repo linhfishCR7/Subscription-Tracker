@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -21,426 +22,601 @@
 
   <link rel="stylesheet" href="app.css">
 </head>
+
 <body>
-<!-- Notification System -->
-<div id="notificationContainer" class="notification-container"></div>
+  <!-- Notification System -->
+  <div id="notificationContainer" class="notification-container"></div>
 
-<!-- Loading Overlay -->
-<div id="loadingOverlay" class="loading-overlay" style="display: none;">
-  <div class="loading-spinner">
-    <div class="spinner"></div>
-    <div class="loading-text">Loading...</div>
-  </div>
-</div>
-
-<!-- Confirmation Modal -->
-<div id="confirmModal" class="modal-overlay" style="display: none;">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="confirmTitle">Confirm Action</h3>
-      <button id="closeModal" class="modal-close">✕</button>
-    </div>
-    <div class="modal-body">
-      <p id="confirmMessage">Are you sure you want to proceed?</p>
-    </div>
-    <div class="modal-footer">
-      <button id="confirmCancel" class="btn-secondary">Cancel</button>
-      <button id="confirmAction" class="btn-danger">Confirm</button>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading...</div>
     </div>
   </div>
-</div>
 
-<div class="wrap">
-  <!-- Welcome Banner -->
-  <div class="welcome-banner" id="welcomeBanner" style="display: none;">
-    <div class="card card--gradient">
-      <h2>Welcome to Subscription Tracker! 🎉</h2>
-      <p>Take control of your subscriptions with smart tracking, automatic reminders, and insightful analytics.</p>
-      <div class="welcome-features">
-        <div class="feature-item">
-          <span class="feature-icon">📊</span>
-          <span>Track spending trends</span>
-        </div>
-        <div class="feature-item">
-          <span class="feature-icon">🔔</span>
-          <span>Never miss renewals</span>
-        </div>
-        <div class="feature-item">
-          <span class="feature-icon">📱</span>
-          <span>Works offline</span>
-        </div>
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="confirmTitle">Confirm Action</h3>
+        <button id="closeModal" class="modal-close">✕</button>
       </div>
-      <button id="startTour" class="btn-outline">Take a Quick Tour</button>
-      <button id="dismissWelcome" class="btn-secondary btn-small">Skip</button>
+      <div class="modal-body">
+        <p id="confirmMessage">Are you sure you want to proceed?</p>
+      </div>
+      <div class="modal-footer">
+        <button id="confirmCancel" class="btn-secondary">Cancel</button>
+        <button id="confirmAction" class="btn-danger">Confirm</button>
+      </div>
     </div>
   </div>
 
-  <header class="app-header">
-    <h1>Subscription Tracker</h1>
-    <div class="sub">Smart subscription management with <b>automatic sync</b> and <b>intelligent insights</b> 📈</div>
-  </header>
+  <!-- Onboarding/Landing Page (shown when not logged in) -->
+  <div id="onboardingPage" class="onboarding-page">
+    <div class="onboarding-container">
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="hero-content">
+          <div class="hero-icon">💳</div>
+          <h1 class="hero-title">Subscription Tracker</h1>
+          <p class="hero-subtitle">Take control of your recurring subscriptions and never miss a payment again</p>
 
-  <!-- Authentication & Connection Status -->
-  <section class="card" data-tour-step="1" data-tour-title="Connect Your Accounts" data-tour-description="Start by connecting your Google account to enable automatic sync and Gmail scanning." role="region" aria-labelledby="auth-heading">
-    <div class="auth-section">
-      <h3 id="auth-heading">Account & Sync</h3>
-      <div class="authbar" role="group" aria-label="Authentication controls">
-        <button id="btnLogin" class="tooltip" data-tooltip="Connect your Google account for sync" aria-describedby="login-help">
-          <span class="feature-icon" aria-hidden="true">🔗</span>
-          Sign in with Google
-        </button>
-        <div id="login-help" class="sr-only">Connect your Google account to enable automatic synchronization and Gmail scanning features</div>
-
-        <button id="btnLogout" class="btn-secondary hidden" aria-label="Sign out of your Google account">
-          <span class="feature-icon" aria-hidden="true">👋</span>
-          Sign Out
-        </button>
-
-        <button id="btnGmail" class="btn-outline hidden tooltip" data-tooltip="Scan Gmail for subscription receipts" aria-describedby="gmail-help">
-          <span class="feature-icon" aria-hidden="true">📧</span>
-          Connect Gmail
-        </button>
-        <div id="gmail-help" class="sr-only">Automatically scan your Gmail for subscription receipts and invoices</div>
-
-        <button id="btnCalendar" class="btn-outline hidden tooltip" data-tooltip="Auto-sync renewals to Google Calendar" aria-describedby="calendar-help">
-          <span class="feature-icon" aria-hidden="true">📅</span>
-          Connect Calendar
-        </button>
-        <div id="calendar-help" class="sr-only">Automatically sync subscription renewals to your Google Calendar</div>
-
-        <div id="userInfo" class="user-info" role="status" aria-live="polite"></div>
-      </div>
-      <div class="connection-status" id="supportNote" role="status" aria-live="polite"></div>
-
-      <!-- Calendar Connection Warning -->
-      <div class="calendar-warning" id="calendarWarning" style="display: none;">
-        <div class="warning-content">
-          <span class="warning-icon">⚠️</span>
-          <div class="warning-text">
-            <strong>Connect Google Calendar</strong>
-            <p>Get automatic renewal reminders by connecting your Google Calendar</p>
+          <div class="hero-cta">
+            <button id="heroLoginBtn" class="btn-primary btn-large">
+              <span class="btn-icon">🚀</span>
+              Get Started with Google
+            </button>
+            <p class="hero-note">Free to use • Secure Google authentication</p>
           </div>
-          <button id="connectCalendarNow" class="btn-warning btn-small">Connect Now</button>
-          <button id="dismissWarning" class="btn-ghost btn-small">Dismiss</button>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- Analytics Dashboard -->
-  <section class="card analytics-dashboard" data-tour-step="2" data-tour-title="Your Subscription Analytics" data-tour-description="Get insights into your spending patterns and upcoming renewals." style="margin-top: var(--spacing-lg);" role="region" aria-labelledby="analytics-heading">
-    <h3 id="analytics-heading">📊 Analytics Overview</h3>
-    <div class="analytics-grid">
-      <div class="metric-card" data-metric="monthlySpending">
-        <div class="metric-value">$0</div>
-        <div class="metric-label">Monthly Spending</div>
-      </div>
-      <div class="metric-card" data-metric="yearlySpending">
-        <div class="metric-value">$0</div>
-        <div class="metric-label">Yearly Spending</div>
-      </div>
-      <div class="metric-card" data-metric="totalSubscriptions">
-        <div class="metric-value">0</div>
-        <div class="metric-label">Active Subscriptions</div>
-      </div>
-      <div class="metric-card" data-metric="dueSoon">
-        <div class="metric-value">0</div>
-        <div class="metric-label">Due This Week</div>
-      </div>
-    </div>
+        <div class="hero-visual">
+          <div class="feature-preview">
+            <div class="preview-card">
+              <div class="preview-header">
+                <div class="preview-dots">
+                  <span></span><span></span><span></span>
+                </div>
+                <div class="preview-title">Your Subscriptions</div>
+              </div>
+              <div class="preview-content">
+                <div class="preview-item">
+                  <span class="preview-icon">🎵</span>
+                  <span class="preview-name">Spotify Premium</span>
+                  <span class="preview-price">$9.99</span>
+                </div>
+                <div class="preview-item">
+                  <span class="preview-icon">📺</span>
+                  <span class="preview-name">Netflix</span>
+                  <span class="preview-price">$15.99</span>
+                </div>
+                <div class="preview-item">
+                  <span class="preview-icon">☁️</span>
+                  <span class="preview-name">iCloud Storage</span>
+                  <span class="preview-price">$2.99</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <!-- Spending Chart -->
-    <div class="chart-container">
-      <h4>Monthly Spending Trend</h4>
-      <div class="chart-wrapper">
-        <canvas id="spendingChart" width="400" height="200"></canvas>
-      </div>
-    </div>
-  </div>
+      <!-- Features Section -->
+      <section class="features-section">
+        <div class="features-header">
+          <h2>Everything you need to manage subscriptions</h2>
+          <p>Powerful features to help you track, analyze, and optimize your recurring expenses</p>
+        </div>
 
-  <div class="grid cols-2" style="margin-top: var(--spacing-lg);">
-    <div class="card">
-      <h3>Thêm / Sửa thuê bao</h3>
-      <div class="row">
-        <div><label>Tên dịch vụ</label><input id="name" placeholder="Ví dụ: Google One 2TB"></div>
-        <div><label>Nhà cung cấp</label><input id="provider" placeholder="Google, Apple, Adobe…"></div>
-      </div>
-      <div class="row">
-        <div><label>Giá mỗi kỳ</label><input id="price" type="number" step="0.01" placeholder="vd 199000"></div>
-        <div><label>Tiền tệ</label><input id="currency" placeholder="VND, USD…" value="VND"></div>
-      </div>
-      <div class="row">
-        <div>
-          <label>Chu kỳ thanh toán</label>
-          <select id="cycle">
-            <option value="monthly">Hàng tháng</option>
-            <option value="yearly">Hàng năm</option>
-            <option value="weekly">Hàng tuần</option>
-            <option value="custom">Tùy chỉnh (ngày)</option>
-          </select>
-        </div>
-        <div id="customDaysWrap" class="hidden">
-          <label>Số ngày mỗi kỳ</label><input id="customDays" type="number" min="1" value="30">
-        </div>
-      </div>
-      <div class="row">
-        <div><label>Ngày bắt đầu hoặc lần thanh toán gần nhất</label><input id="startDate" type="date"></div>
-        <div><label>Nhắc trước (ngày)</label><input id="remindBefore" type="number" value="7" min="0"></div>
-      </div>
-      <div class="row">
-        <div><label>Thẻ (tags)</label><input id="tags" placeholder="gia đình, công việc… (phân tách bởi dấu phẩy)"></div>
-        <div><label>Trạng thái</label>
-          <select id="status">
-            <option value="active" selected>Đang dùng</option>
-            <option value="paused">Tạm dừng</option>
-            <option value="cancelled">Đã hủy</option>
-          </select>
-        </div>
-      </div>
-      <label>Ghi chú</label><textarea id="notes" placeholder="ID hóa đơn, email đăng ký, kênh thanh toán, gói cước…"></textarea>
-      <div class="toolbar" style="margin-top:8px">
-        <button id="saveBtn">Lưu thuê bao</button>
-        <button class="ghost" id="resetBtn">Làm mới</button>
-        <button class="ghost" id="enableNotify">Bật thông báo & lịch nền</button>
-        <span class="right small muted">Tự động đồng bộ Google Calendar nếu đã kết nối</span>
-      </div>
-      <input type="hidden" id="editId" />
-    </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Smart Analytics</h3>
+            <p>Get insights into your spending patterns with detailed charts and monthly/yearly breakdowns</p>
+          </div>
 
-    <div class="card" data-tour-step="4" data-tour-title="Smart Search & Filters" data-tour-description="Quickly find and organize your subscriptions with powerful search and filtering options.">
-      <h3>🔍 Search & Filter</h3>
+          <div class="feature-card">
+            <div class="feature-icon">📅</div>
+            <h3>Calendar Sync</h3>
+            <p>Automatically sync renewal dates to Google Calendar and never miss a payment deadline</p>
+          </div>
 
-      <!-- Enhanced Search Bar -->
-      <div class="search-container">
-        <div class="search-input-wrapper">
-          <span class="search-icon">🔍</span>
-          <input id="search" placeholder="Search by name, provider, or tags..." />
-          <button id="clearSearch" class="clear-search" style="display: none;">✕</button>
-        </div>
-      </div>
+          <div class="feature-card">
+            <div class="feature-icon">📧</div>
+            <h3>Gmail Integration</h3>
+            <p>Scan your Gmail for subscription receipts and automatically add new subscriptions</p>
+          </div>
 
-      <!-- Simple Status Filter -->
-      <div class="simple-filters">
-        <div class="filter-group">
-          <label>Status:</label>
-          <select id="filterStatus" class="filter-select">
-            <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-      </div>
-      <!-- Calendar Export -->
-      <div class="export-section">
-        <h4>📅 Export Calendar</h4>
-        <div class="export-simple">
-          <button id="downloadICS" class="btn-primary">
-            <span class="feature-icon">📅</span>
-            Export to Calendar (.ics)
-          </button>
-          <p class="export-description">Download calendar file to import renewal dates into any calendar app</p>
-        </div>
-      </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔔</div>
+            <h3>Smart Reminders</h3>
+            <p>Get notified before renewals and track which subscriptions are due soon</p>
+          </div>
 
-    </div>
-  </div>
+          <div class="feature-card">
+            <div class="feature-icon">💰</div>
+            <h3>Cost Tracking</h3>
+            <p>Monitor your monthly and yearly subscription costs with detailed spending analysis</p>
+          </div>
 
-  <!-- Bulk Operations Panel -->
-  <div class="bulk-operations-panel" id="bulkPanel" style="display: none;">
-    <div class="card card--elevated">
-      <div class="bulk-header">
-        <div class="bulk-info">
-          <span class="bulk-count" id="bulkCount">0</span> items selected
+          <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3>Secure & Private</h3>
+            <p>Your data is encrypted and stored securely with Google Firebase authentication</p>
+          </div>
         </div>
-        <div class="bulk-actions">
-          <button id="bulkEdit" class="btn-outline btn-small">
-            <span class="feature-icon">✏️</span>
-            Edit Selected
-          </button>
-          <button id="bulkPause" class="btn-outline btn-small">
-            <span class="feature-icon">⏸️</span>
-            Pause
-          </button>
-          <button id="bulkResume" class="btn-outline btn-small">
-            <span class="feature-icon">▶️</span>
-            Resume
-          </button>
-          <button id="bulkDelete" class="btn-danger btn-small">
-            <span class="feature-icon">🗑️</span>
-            Delete
-          </button>
-          <button id="bulkCancel" class="btn-secondary btn-small">Cancel</button>
+      </section>
+
+      <!-- Benefits Section -->
+      <section class="benefits-section">
+        <div class="benefits-content">
+          <div class="benefits-text">
+            <h2>Why choose Subscription Tracker?</h2>
+            <div class="benefits-list">
+              <div class="benefit-item">
+                <span class="benefit-icon">✅</span>
+                <div class="benefit-text">
+                  <strong>Save Money</strong>
+                  <p>Identify unused subscriptions and avoid unwanted renewals</p>
+                </div>
+              </div>
+
+              <div class="benefit-item">
+                <span class="benefit-icon">⏰</span>
+                <div class="benefit-text">
+                  <strong>Never Miss Payments</strong>
+                  <p>Get timely reminders and calendar notifications for all renewals</p>
+                </div>
+              </div>
+
+              <div class="benefit-item">
+                <span class="benefit-icon">📈</span>
+                <div class="benefit-text">
+                  <strong>Track Spending Trends</strong>
+                  <p>Visualize your subscription costs and make informed decisions</p>
+                </div>
+              </div>
+
+              <div class="benefit-item">
+                <span class="benefit-icon">🚀</span>
+                <div class="benefit-text">
+                  <strong>Easy Setup</strong>
+                  <p>Get started in seconds with Google authentication - no complex setup required</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="benefits-cta">
+            <div class="cta-card">
+              <h3>Ready to take control?</h3>
+              <p>Join thousands of users who are already saving money and staying organized</p>
+              <button id="ctaLoginBtn" class="btn-primary btn-large">
+                <span class="btn-icon">🔐</span>
+                Sign in with Google
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   </div>
 
-  <div class="card subscriptions-table-card" data-tour-step="5" data-tour-title="Manage Your Subscriptions" data-tour-description="View, edit, and manage all your subscriptions in one place. Use bulk operations for efficient management." style="margin-top: var(--spacing-lg);">
-    <!-- Table Controls -->
-    <div class="table-controls">
-      <div class="table-header">
-        <h3>📋 Your Subscriptions</h3>
-        <div class="table-actions">
-          <button id="selectAll" class="btn-outline btn-small">
-            <span class="feature-icon">☑️</span>
-            Select All
-          </button>
-          <button id="bulkMode" class="btn-secondary btn-small">
-            <span class="feature-icon">⚡</span>
-            Bulk Actions
-          </button>
-        </div>
-      </div>
-
-      <div class="toolbar">
-        <div class="sort-controls">
-          <label class="sort-label">Sort by:</label>
-          <select id="sortBy" class="filter-select">
-            <option value="next">Next Renewal</option>
-            <option value="name">Name</option>
-            <option value="price">Price</option>
-            <option value="provider">Provider</option>
-            <option value="created">Date Added</option>
-          </select>
-          <select id="sortDir" class="filter-select">
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </select>
-        </div>
-
-        <div class="view-controls">
-          <button id="viewTable" class="view-toggle active" data-view="table">
+  <div id="mainApp" class="wrap hidden">
+    <!-- Welcome Banner -->
+    <div class="welcome-banner" id="welcomeBanner" style="display: none;">
+      <div class="card card--gradient">
+        <h2>Welcome to Subscription Tracker! 🎉</h2>
+        <p>Take control of your subscriptions with smart tracking, automatic reminders, and insightful analytics.</p>
+        <div class="welcome-features">
+          <div class="feature-item">
             <span class="feature-icon">📊</span>
-            Table
-          </button>
-          <button id="viewCards" class="view-toggle" data-view="cards">
-            <span class="feature-icon">🃏</span>
-            Cards
-          </button>
+            <span>Track spending trends</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">🔔</span>
+            <span>Never miss renewals</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">📱</span>
+            <span>Works offline</span>
+          </div>
         </div>
-
-        <div class="summary-stats" id="totals"></div>
+        <button id="startTour" class="btn-outline">Take a Quick Tour</button>
+        <button id="dismissWelcome" class="btn-secondary btn-small">Skip</button>
       </div>
     </div>
-    <!-- Table View -->
-    <div class="table-wrapper" id="table-container">
-      <table id="table">
-        <thead><tr>
-          <th>Name</th><th>Provider</th><th>Price</th><th>Cycle</th>
-          <th>Progress</th><th>Next Renewal</th><th>Status</th><th>Tags</th><th>Actions</th>
-        </tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
 
-    <!-- Card View -->
-    <div class="cards-container" id="cards-container" style="display: none;">
-      <div class="subscriptions-grid" id="subscriptions-cards"></div>
-    </div>
+    <header class="app-header">
+      <h1>Subscription Tracker</h1>
+      <div class="sub">Smart subscription management with <b>automatic sync</b> and <b>intelligent insights</b> 📈</div>
+    </header>
+
+    <!-- Authentication & Connection Status -->
+    <section class="card" data-tour-step="1" data-tour-title="Connect Your Accounts"
+      data-tour-description="Start by connecting your Google account to enable automatic sync and Gmail scanning."
+      role="region" aria-labelledby="auth-heading">
+      <div class="auth-section">
+        <h3 id="auth-heading">Account & Sync</h3>
+        <div class="authbar" role="group" aria-label="Authentication controls">
+          <button id="btnLogin" class="tooltip" data-tooltip="Connect your Google account for sync"
+            aria-describedby="login-help">
+            <span class="feature-icon" aria-hidden="true">🔗</span>
+            Sign in with Google
+          </button>
+          <div id="login-help" class="sr-only">Connect your Google account to enable automatic synchronization and Gmail
+            scanning features</div>
+
+          <button id="btnLogout" class="btn-secondary hidden" aria-label="Sign out of your Google account">
+            <span class="feature-icon" aria-hidden="true">👋</span>
+            Sign Out
+          </button>
+
+          <button id="btnGmail" class="btn-outline hidden tooltip" data-tooltip="Scan Gmail for subscription receipts"
+            aria-describedby="gmail-help">
+            <span class="feature-icon" aria-hidden="true">📧</span>
+            Connect Gmail
+          </button>
+          <div id="gmail-help" class="sr-only">Automatically scan your Gmail for subscription receipts and invoices
+          </div>
+
+          <button id="btnCalendar" class="btn-outline hidden tooltip"
+            data-tooltip="Auto-sync renewals to Google Calendar" aria-describedby="calendar-help">
+            <span class="feature-icon" aria-hidden="true">📅</span>
+            Connect Calendar
+          </button>
+          <div id="calendar-help" class="sr-only">Automatically sync subscription renewals to your Google Calendar</div>
+
+          <div id="userInfo" class="user-info" role="status" aria-live="polite"></div>
+        </div>
+        <div class="connection-status" id="supportNote" role="status" aria-live="polite"></div>
+
+        <!-- Calendar Connection Warning -->
+        <div class="calendar-warning" id="calendarWarning" style="display: none;">
+          <div class="warning-content">
+            <span class="warning-icon">⚠️</span>
+            <div class="warning-text">
+              <strong>Connect Google Calendar</strong>
+              <p>Get automatic renewal reminders by connecting your Google Calendar</p>
+            </div>
+            <button id="connectCalendarNow" class="btn-warning btn-small">Connect Now</button>
+            <button id="dismissWarning" class="btn-ghost btn-small">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analytics Dashboard -->
+    <section class="card analytics-dashboard" data-tour-step="2" data-tour-title="Your Subscription Analytics"
+      data-tour-description="Get insights into your spending patterns and upcoming renewals."
+      style="margin-top: var(--spacing-lg);" role="region" aria-labelledby="analytics-heading">
+      <h3 id="analytics-heading">📊 Analytics Overview</h3>
+      <div class="analytics-grid">
+        <div class="metric-card" data-metric="monthlySpending">
+          <div class="metric-value">$0</div>
+          <div class="metric-label">Monthly Spending</div>
+        </div>
+        <div class="metric-card" data-metric="yearlySpending">
+          <div class="metric-value">$0</div>
+          <div class="metric-label">Yearly Spending</div>
+        </div>
+        <div class="metric-card" data-metric="totalSubscriptions">
+          <div class="metric-value">0</div>
+          <div class="metric-label">Active Subscriptions</div>
+        </div>
+        <div class="metric-card" data-metric="dueSoon">
+          <div class="metric-value">0</div>
+          <div class="metric-label">Due This Week</div>
+        </div>
+      </div>
+
+      <!-- Spending Chart -->
+      <div class="chart-container">
+        <h4>Monthly Spending Trend</h4>
+        <div class="chart-wrapper">
+          <canvas id="spendingChart" width="400" height="200"></canvas>
+        </div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top: var(--spacing-lg);">
+        <div class="card">
+          <h3>Thêm / Sửa thuê bao</h3>
+          <div class="row">
+            <div><label>Tên dịch vụ</label><input id="name" placeholder="Ví dụ: Google One 2TB"></div>
+            <div><label>Nhà cung cấp</label><input id="provider" placeholder="Google, Apple, Adobe…"></div>
+          </div>
+          <div class="row">
+            <div><label>Giá mỗi kỳ</label><input id="price" type="number" step="0.01" placeholder="vd 199000"></div>
+            <div><label>Tiền tệ</label><input id="currency" placeholder="VND, USD…" value="VND"></div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Chu kỳ thanh toán</label>
+              <select id="cycle">
+                <option value="monthly">Hàng tháng</option>
+                <option value="yearly">Hàng năm</option>
+                <option value="weekly">Hàng tuần</option>
+                <option value="custom">Tùy chỉnh (ngày)</option>
+              </select>
+            </div>
+            <div id="customDaysWrap" class="hidden">
+              <label>Số ngày mỗi kỳ</label><input id="customDays" type="number" min="1" value="30">
+            </div>
+          </div>
+          <div class="row">
+            <div><label>Ngày bắt đầu hoặc lần thanh toán gần nhất</label><input id="startDate" type="date"></div>
+            <div><label>Nhắc trước (ngày)</label><input id="remindBefore" type="number" value="7" min="0"></div>
+          </div>
+          <div class="row">
+            <div><label>Thẻ (tags)</label><input id="tags" placeholder="gia đình, công việc… (phân tách bởi dấu phẩy)">
+            </div>
+            <div><label>Trạng thái</label>
+              <select id="status">
+                <option value="active" selected>Đang dùng</option>
+                <option value="paused">Tạm dừng</option>
+                <option value="cancelled">Đã hủy</option>
+              </select>
+            </div>
+          </div>
+          <label>Ghi chú</label><textarea id="notes"
+            placeholder="ID hóa đơn, email đăng ký, kênh thanh toán, gói cước…"></textarea>
+          <div class="toolbar" style="margin-top:8px">
+            <button id="saveBtn">Lưu thuê bao</button>
+            <button class="ghost" id="resetBtn">Làm mới</button>
+            <button class="ghost" id="enableNotify">Bật thông báo & lịch nền</button>
+            <span class="right small muted">Tự động đồng bộ Google Calendar nếu đã kết nối</span>
+          </div>
+          <input type="hidden" id="editId" />
+        </div>
+
+        <div class="card" data-tour-step="4" data-tour-title="Smart Search & Filters"
+          data-tour-description="Quickly find and organize your subscriptions with powerful search and filtering options.">
+          <h3>🔍 Search & Filter</h3>
+
+          <!-- Enhanced Search Bar -->
+          <div class="search-container">
+            <div class="search-input-wrapper">
+              <span class="search-icon">🔍</span>
+              <input id="search" placeholder="Search by name, provider, or tags..." />
+              <button id="clearSearch" class="clear-search" style="display: none;">✕</button>
+            </div>
+          </div>
+
+          <!-- Simple Status Filter -->
+          <div class="simple-filters">
+            <div class="filter-group">
+              <label>Status:</label>
+              <select id="filterStatus" class="filter-select">
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+          <!-- Calendar Export -->
+          <div class="export-section">
+            <h4>📅 Export Calendar</h4>
+            <div class="export-simple">
+              <button id="downloadICS" class="btn-primary">
+                <span class="feature-icon">📅</span>
+                Export to Calendar (.ics)
+              </button>
+              <p class="export-description">Download calendar file to import renewal dates into any calendar app</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Bulk Operations Panel -->
+      <div class="bulk-operations-panel" id="bulkPanel" style="display: none;">
+        <div class="card card--elevated">
+          <div class="bulk-header">
+            <div class="bulk-info">
+              <span class="bulk-count" id="bulkCount">0</span> items selected
+            </div>
+            <div class="bulk-actions">
+              <button id="bulkEdit" class="btn-outline btn-small">
+                <span class="feature-icon">✏️</span>
+                Edit Selected
+              </button>
+              <button id="bulkPause" class="btn-outline btn-small">
+                <span class="feature-icon">⏸️</span>
+                Pause
+              </button>
+              <button id="bulkResume" class="btn-outline btn-small">
+                <span class="feature-icon">▶️</span>
+                Resume
+              </button>
+              <button id="bulkDelete" class="btn-danger btn-small">
+                <span class="feature-icon">🗑️</span>
+                Delete
+              </button>
+              <button id="bulkCancel" class="btn-secondary btn-small">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card subscriptions-table-card" data-tour-step="5" data-tour-title="Manage Your Subscriptions"
+        data-tour-description="View, edit, and manage all your subscriptions in one place. Use bulk operations for efficient management."
+        style="margin-top: var(--spacing-lg);">
+        <!-- Table Controls -->
+        <div class="table-controls">
+          <div class="table-header">
+            <h3>📋 Your Subscriptions</h3>
+            <div class="table-actions">
+              <button id="selectAll" class="btn-outline btn-small">
+                <span class="feature-icon">☑️</span>
+                Select All
+              </button>
+              <button id="bulkMode" class="btn-secondary btn-small">
+                <span class="feature-icon">⚡</span>
+                Bulk Actions
+              </button>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <div class="sort-controls">
+              <label class="sort-label">Sort by:</label>
+              <select id="sortBy" class="filter-select">
+                <option value="next">Next Renewal</option>
+                <option value="name">Name</option>
+                <option value="price">Price</option>
+                <option value="provider">Provider</option>
+                <option value="created">Date Added</option>
+              </select>
+              <select id="sortDir" class="filter-select">
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+            </div>
+
+            <div class="view-controls">
+              <button id="viewTable" class="view-toggle active" data-view="table">
+                <span class="feature-icon">📊</span>
+                Table
+              </button>
+              <button id="viewCards" class="view-toggle" data-view="cards">
+                <span class="feature-icon">🃏</span>
+                Cards
+              </button>
+            </div>
+
+            <div class="summary-stats" id="totals"></div>
+          </div>
+        </div>
+        <!-- Table View -->
+        <div class="table-wrapper" id="table-container">
+          <table id="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Provider</th>
+                <th>Price</th>
+                <th>Cycle</th>
+                <th>Progress</th>
+                <th>Next Renewal</th>
+                <th>Status</th>
+                <th>Tags</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- Card View -->
+        <div class="cards-container" id="cards-container" style="display: none;">
+          <div class="subscriptions-grid" id="subscriptions-cards"></div>
+        </div>
+      </div>
   </div>
-</div>
 
-<script src="app-enhancements.js"></script>
-<script src="app.js"></script>
+  <script src="app-enhancements.js"></script>
+  <script src="app.js"></script>
 
-<!-- Initialize enhanced features -->
-<script>
-// Initialize welcome banner for new users
-document.addEventListener('DOMContentLoaded', function() {
-    const hasSeenWelcome = localStorage.getItem('welcome-seen');
-    const hasTourCompleted = localStorage.getItem('tour-completed');
+  <!-- Initialize enhanced features -->
+  <script>
+    // Initialize welcome banner for new users
+    document.addEventListener('DOMContentLoaded', function () {
+      const hasSeenWelcome = localStorage.getItem('welcome-seen');
+      const hasTourCompleted = localStorage.getItem('tour-completed');
 
-    if (!hasSeenWelcome) {
+      if (!hasSeenWelcome) {
         document.getElementById('welcomeBanner').style.display = 'block';
         localStorage.setItem('welcome-seen', 'true');
-    }
+      }
 
-    // Welcome banner event listeners
-    document.getElementById('startTour')?.addEventListener('click', function() {
+      // Welcome banner event listeners
+      document.getElementById('startTour')?.addEventListener('click', function () {
         document.getElementById('welcomeBanner').style.display = 'none';
         tour.start();
-    });
+      });
 
-    document.getElementById('dismissWelcome')?.addEventListener('click', function() {
+      document.getElementById('dismissWelcome')?.addEventListener('click', function () {
         document.getElementById('welcomeBanner').style.display = 'none';
-    });
+      });
 
-    // Keyboard navigation support
-    document.addEventListener('keydown', function(e) {
+      // Keyboard navigation support
+      document.addEventListener('keydown', function (e) {
         if (e.key === 'Tab') {
-            document.body.classList.add('keyboard-user');
+          document.body.classList.add('keyboard-user');
         }
-    });
+      });
 
-    document.addEventListener('mousedown', function() {
+      document.addEventListener('mousedown', function () {
         document.body.classList.remove('keyboard-user');
-    });
+      });
 
-    // Enhanced search functionality
-    const searchInput = document.getElementById('search');
-    const clearSearch = document.getElementById('clearSearch');
+      // Enhanced search functionality
+      const searchInput = document.getElementById('search');
+      const clearSearch = document.getElementById('clearSearch');
 
-    if (searchInput && clearSearch) {
-        searchInput.addEventListener('input', function() {
-            clearSearch.style.display = this.value ? 'block' : 'none';
+      if (searchInput && clearSearch) {
+        searchInput.addEventListener('input', function () {
+          clearSearch.style.display = this.value ? 'block' : 'none';
         });
 
-        clearSearch.addEventListener('click', function() {
-            searchInput.value = '';
-            searchInput.dispatchEvent(new Event('input'));
-            this.style.display = 'none';
-            searchInput.focus();
+        clearSearch.addEventListener('click', function () {
+          searchInput.value = '';
+          searchInput.dispatchEvent(new Event('input'));
+          this.style.display = 'none';
+          searchInput.focus();
         });
-    }
+      }
 
-    // Quick filter tags
-    document.querySelectorAll('.quick-filter-tag').forEach(tag => {
-        tag.addEventListener('click', function() {
-            this.classList.toggle('active');
-            // Trigger filter update
-            if (typeof render === 'function') {
-                render();
-            }
+      // Quick filter tags
+      document.querySelectorAll('.quick-filter-tag').forEach(tag => {
+        tag.addEventListener('click', function () {
+          this.classList.toggle('active');
+          // Trigger filter update
+          if (typeof render === 'function') {
+            render();
+          }
         });
-    });
+      });
 
-    // Accessibility improvements
-    const skipLink = document.createElement('a');
-    skipLink.href = '#main-content';
-    skipLink.className = 'skip-link';
-    skipLink.textContent = 'Skip to main content';
-    document.body.insertBefore(skipLink, document.body.firstChild);
+      // Accessibility improvements
+      const skipLink = document.createElement('a');
+      skipLink.href = '#main-content';
+      skipLink.className = 'skip-link';
+      skipLink.textContent = 'Skip to main content';
+      document.body.insertBefore(skipLink, document.body.firstChild);
 
-    // Add main content landmark
-    const wrap = document.querySelector('.wrap');
-    if (wrap) {
+      // Add main content landmark
+      const wrap = document.querySelector('.wrap');
+      if (wrap) {
         wrap.id = 'main-content';
         wrap.setAttribute('role', 'main');
-    }
-});
+      }
+    });
 
-// Enhanced error handling
-window.addEventListener('error', function(e) {
-    console.error('Application error:', e.error);
-    notifications.show(
+    // Enhanced error handling
+    window.addEventListener('error', function (e) {
+      console.error('Application error:', e.error);
+      notifications.show(
         'An unexpected error occurred. Please try refreshing the page.',
         'error',
         0,
         'Application Error'
-    );
-});
+      );
+    });
 
-// Enhanced promise rejection handling
-window.addEventListener('unhandledrejection', function(e) {
-    console.error('Unhandled promise rejection:', e.reason);
-    notifications.show(
+    // Enhanced promise rejection handling
+    window.addEventListener('unhandledrejection', function (e) {
+      console.error('Unhandled promise rejection:', e.reason);
+      notifications.show(
         'A network or data error occurred. Please check your connection.',
         'warning',
         5000,
         'Connection Issue'
-    );
-});
-</script>
+      );
+    });
+  </script>
 </body>
+
 </html>
