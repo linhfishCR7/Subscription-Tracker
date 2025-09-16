@@ -479,11 +479,11 @@ th {
 }
 
 .right {
-    margin-left: auto
+    margin-left: auto;
 }
 
 .hidden {
-    display: none
+    display: none !important;
 }
 
 .cap {
