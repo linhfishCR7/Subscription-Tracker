@@ -1090,9 +1090,20 @@ function downloadFile(content, filename, mimeType) {
 }
 
 /* ===== CRUD ===== */
-$('#cycle').addEventListener('change',()=>$('#customDaysWrap').classList.toggle('hidden',$('#cycle').value!=='custom'));
+// Form event listeners with null checks
+const cycleSelect = $('#cycle');
+if (cycleSelect) {
+  cycleSelect.addEventListener('change',()=>{
+    const customDaysWrap = $('#customDaysWrap');
+    if (customDaysWrap) {
+      customDaysWrap.classList.toggle('hidden', cycleSelect.value !== 'custom');
+    }
+  });
+}
 
-$('#saveBtn').addEventListener('click', async ()=>{
+const saveBtn = $('#saveBtn');
+if (saveBtn) {
+  saveBtn.addEventListener('click', async ()=>{
   const id=$('#editId').value||uid();
   let item={
     id,
@@ -1125,9 +1136,14 @@ $('#saveBtn').addEventListener('click', async ()=>{
     }
   }catch(e){ console.warn('Save/Sync error', e); }
   clearForm();
-});
+  });
+}
 
-$('#resetBtn').addEventListener('click', clearForm);
+// Reset button with null check
+const resetBtn = $('#resetBtn');
+if (resetBtn) {
+  resetBtn.addEventListener('click', clearForm);
+}
 function clearForm(){
   $('#editId').value='';
   ['name','provider','price','currency','customDays','startDate','remindBefore','tags','notes'].forEach(id=>$('#'+id).value='');
@@ -1158,9 +1174,80 @@ async function delItem(id){
 }
 
 /* ===== Import/Export ===== */
-$('#exportJSON').addEventListener('click',()=>{ const blob=new Blob([JSON.stringify(loadLocal(),null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='subscriptions.json'; a.click(); URL.revokeObjectURL(a.href); });
-$('#importJSON').addEventListener('click',()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json'; inp.onchange=async()=>{ const f=inp.files[0]; if(!f) return; const r=new FileReader(); r.onload=async()=>{ try{ const data=JSON.parse(r.result); if(Array.isArray(data)){ saveLocal(data); render(); if(auth.currentUser){ for(const it of data){ await upsertToFirestore(it); if(gcalAccessToken){ const updated = await syncItemToCalendar(it); if(updated){ const list=loadLocal().map(x=>x.id===it.id?{...it,...updated}:x); saveLocal(list); await upsertToFirestore({...it,...updated}); } } } } } else alert('Tệp không hợp lệ'); }catch(e){ alert('Không đọc được JSON') } }; r.readAsText(f); }; inp.click(); });
-$('#exportCSV').addEventListener('click',()=>{ const list=loadLocal(); const header=['name','provider','price','currency','cycle','customDays','startDate','remindBefore','tags','status','notes']; const rows=[header.join(',')].concat(list.map(it=> header.map(k=>{ let v=it[k]; if(Array.isArray(v)) v=v.join('|'); if(v==null) v=''; return '"'+String(v).replace(/"/g,'""')+'"'; }).join(','))); const blob=new Blob([rows.join('\n')],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='subscriptions.csv'; a.click(); URL.revokeObjectURL(a.href); });
+// Export JSON functionality (removed from UI but kept for potential future use)
+const exportJSONBtn = $('#exportJSON');
+if (exportJSONBtn) {
+  exportJSONBtn.addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify(loadLocal(),null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='subscriptions.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+}
+
+// Import JSON functionality (removed from UI but kept for potential future use)
+const importJSONBtn = $('#importJSON');
+if (importJSONBtn) {
+  importJSONBtn.addEventListener('click',()=>{
+    const inp=document.createElement('input');
+    inp.type='file';
+    inp.accept='.json,application/json';
+    inp.onchange=async()=>{
+      const f=inp.files[0];
+      if(!f) return;
+      const r=new FileReader();
+      r.onload=async()=>{
+        try{
+          const data=JSON.parse(r.result);
+          if(Array.isArray(data)){
+            saveLocal(data);
+            render();
+            if(auth.currentUser){
+              for(const it of data){
+                await upsertToFirestore(it);
+                if(gcalAccessToken){
+                  const updated = await syncItemToCalendar(it);
+                  if(updated){
+                    const list=loadLocal().map(x=>x.id===it.id?{...it,...updated}:x);
+                    saveLocal(list);
+                    await upsertToFirestore({...it,...updated});
+                  }
+                }
+              }
+            }
+          } else alert('Tệp không hợp lệ');
+        }catch(e){
+          alert('Không đọc được JSON')
+        }
+      };
+      r.readAsText(f);
+    };
+    inp.click();
+  });
+}
+
+// Export CSV functionality (removed from UI but kept for potential future use)
+const exportCSVBtn = $('#exportCSV');
+if (exportCSVBtn) {
+  exportCSVBtn.addEventListener('click',()=>{
+    const list=loadLocal();
+    const header=['name','provider','price','currency','cycle','customDays','startDate','remindBefore','tags','status','notes'];
+    const rows=[header.join(',')].concat(list.map(it=> header.map(k=>{
+      let v=it[k];
+      if(Array.isArray(v)) v=v.join('|');
+      if(v==null) v='';
+      return '"'+String(v).replace(/"/g,'""')+'"';
+    }).join(',')));
+    const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='subscriptions.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+}
 
 /* ===== iCal (giữ lại, nhưng Calendar đã tự sync) ===== */
 function icsEscape(s){return String(s||'').replace(/[\\,;]/g,'\\$&').replace(/\n/g,'\\n')}
@@ -1168,7 +1255,21 @@ function pad(n){return (n<10?'0':'')+n}
 function fmtICSDate(d){const y=d.getFullYear(),m=pad(d.getMonth()+1),da=pad(d.getDate());return `${y}${m}${da}`;}
 function makeICSForItem(it){ const next=nextRenewal(it.startDate,it.cycle,it.customDays); if(!next) return ''; let rrule=''; if(it.cycle==='weekly') rrule='RRULE:FREQ=WEEKLY'; else if(it.cycle==='monthly') rrule='RRULE:FREQ=MONTHLY'; else if(it.cycle==='yearly') rrule='RRULE:FREQ=YEARLY'; else rrule=`RRULE:FREQ=DAILY;INTERVAL=${Math.max(1,Number(it.customDays||30))}`; const dt=fmtICSDate(next); const alarmDays=Math.max(0,Number(it.remindBefore||7)); const trigger=`TRIGGER:-P${alarmDays}D`; const uidStr=it.id+'@subscription-tracker'; const title=`Gia hạn: ${it.name}`; const desc=`Nhà cung cấp: ${it.provider||''}\\nGiá/kỳ: ${it.price||''} ${it.currency||''}\\nChu kỳ: ${cycleLabel(it.cycle,it.customDays)}\\nGhi chú: ${icsEscape(it.notes||'')}`; return ['BEGIN:VEVENT',`UID:${uidStr}`,`DTSTAMP:${fmtICSDate(new Date())}T000000`,`SUMMARY:${icsEscape(title)}`,`DESCRIPTION:${desc}`,`DTSTART;VALUE=DATE:${dt}`,rrule,'BEGIN:VALARM',trigger,'ACTION:DISPLAY',`DESCRIPTION:${icsEscape(title)}`,'END:VALARM','END:VEVENT'].join('\n'); }
 function downloadICSFor(id){ const it=loadLocal().find(x=>x.id===id); if(!it) return; const body=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Subscription Tracker//EN',makeICSForItem(it),'END:VCALENDAR'].join('\n'); const blob=new Blob([body],{type:'text/calendar'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${(it.name||'subscription')}.ics`; a.click(); URL.revokeObjectURL(a.href); }
-$('#downloadICS').addEventListener('click',()=>{ const items=loadLocal(); const events=items.map(makeICSForItem).filter(Boolean).join('\n'); const body=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Subscription Tracker//EN',events,'END:VCALENDAR'].join('\n'); const blob=new Blob([body],{type:'text/calendar'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='subscriptions.ics'; a.click(); URL.revokeObjectURL(a.href); });
+// Calendar export functionality (kept in simplified UI)
+const downloadICSBtn = $('#downloadICS');
+if (downloadICSBtn) {
+  downloadICSBtn.addEventListener('click',()=>{
+    const items=loadLocal();
+    const events=items.map(makeICSForItem).filter(Boolean).join('\n');
+    const body=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Subscription Tracker//EN',events,'END:VCALENDAR'].join('\n');
+    const blob=new Blob([body],{type:'text/calendar'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='subscriptions.ics';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+}
 
 /* ===== PWA / Notifications ===== */
 function setSupportNote(){
@@ -1179,29 +1280,41 @@ function setSupportNote(){
   $('#supportNote').textContent=msg;
 }
 async function registerSW(){ if(!('serviceWorker' in navigator)) return; try{ await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready; }catch(e){ console.error('SW register failed',e); } }
-$('#enableNotify').addEventListener('click', async ()=>{
-  if(!('Notification' in window)) return alert('Trình duyệt không hỗ trợ Notification API');
-  const perm = await Notification.requestPermission();
-  if(perm!=='granted') return alert('Bạn đã từ chối thông báo');
-  await registerSW();
-  const reg = await navigator.serviceWorker.ready;
-  if('periodicSync' in reg){
-    try{ await reg.periodicSync.register('check-subscriptions',{minInterval:12*60*60*1000}); alert('Đã bật nhắc nền (Periodic Background Sync)'); }
-    catch(e){ console.warn('PBS failed',e); alert('Thiết bị không bật được nhắc nền. Không sao, đã có Google Calendar nhắc qua cloud.'); }
-  } else {
-    alert('Thiết bị không hỗ trợ Periodic Background Sync. Không sao, đã có Google Calendar nhắc qua cloud.');
-  }
-});
+// Enable notifications functionality with null check
+const enableNotifyBtn = $('#enableNotify');
+if (enableNotifyBtn) {
+  enableNotifyBtn.addEventListener('click', async ()=>{
+    if(!('Notification' in window)) return alert('Trình duyệt không hỗ trợ Notification API');
+    const perm = await Notification.requestPermission();
+    if(perm!=='granted') return alert('Bạn đã từ chối thông báo');
+    await registerSW();
+    const reg = await navigator.serviceWorker.ready;
+    if('periodicSync' in reg){
+      try{ await reg.periodicSync.register('check-subscriptions',{minInterval:12*60*60*1000}); alert('Đã bật nhắc nền (Periodic Background Sync)'); }
+      catch(e){ console.warn('PBS failed',e); alert('Thiết bị không bật được nhắc nền. Không sao, đã có Google Calendar nhắc qua cloud.'); }
+    } else {
+      alert('Thiết bị không hỗ trợ Periodic Background Sync. Không sao, đã có Google Calendar nhắc qua cloud.');
+    }
+  });
+}
 function scheduleChecks(){ try{ checkDue(); }catch{} setInterval(()=>{ try{ checkDue(); }catch{} }, 60*60*1000); }
 function checkDue(){ if(!('Notification' in window)||Notification.permission!=='granted') return; const list=loadLocal(); const today=toStartOfDay(new Date()); list.forEach(it=>{ if((it.status||'active')!=='active') return; const next=nextRenewal(it.startDate,it.cycle,it.customDays); if(!next) return; const days=daysBetween(today,next); const threshold=Number(it.remindBefore||7); const key='notified-'+it.id+'-'+next.toISOString().slice(0,10); if(days<=threshold){ if(sessionStorage.getItem(key)) return; new Notification('Sắp đến hạn: '+(it.name||'Thuê bao'),{ body:`${it.provider||''} • còn ${days<0?('quá '+Math.abs(days)):days} ngày • ${next.toLocaleDateString()}`}); sessionStorage.setItem(key,'1'); } }); }
 
 /* ===== Auth ===== */
-$('#btnLogin').addEventListener('click', async ()=>{
-  const provider=new firebase.auth.GoogleAuthProvider();
-  provider.addScope('profile'); provider.addScope('email');
-  try{ await auth.signInWithPopup(provider); }catch(e){ alert('Login lỗi: '+e.message); }
-});
-$('#btnLogout').addEventListener('click', ()=>auth.signOut());
+// Login and logout buttons with null checks
+const btnLogin = $('#btnLogin');
+if (btnLogin) {
+  btnLogin.addEventListener('click', async ()=>{
+    const provider=new firebase.auth.GoogleAuthProvider();
+    provider.addScope('profile'); provider.addScope('email');
+    try{ await auth.signInWithPopup(provider); }catch(e){ alert('Login lỗi: '+e.message); }
+  });
+}
+
+const btnLogout = $('#btnLogout');
+if (btnLogout) {
+  btnLogout.addEventListener('click', ()=>auth.signOut());
+}
 
 auth.onAuthStateChanged(async (user)=>{
   if(user){
@@ -1240,8 +1353,16 @@ window.addEventListener('load', ()=>{
   });
 });
 
-$('#btnGmail').addEventListener('click', ()=>{ gmailTokenClient?.requestAccessToken({prompt:'consent'}); });
-$('#btnCalendar').addEventListener('click', ()=>{ gcalTokenClient?.requestAccessToken({prompt:'consent'}); });
+// Gmail and Calendar OAuth buttons with null checks
+const btnGmail = $('#btnGmail');
+if (btnGmail) {
+  btnGmail.addEventListener('click', ()=>{ gmailTokenClient?.requestAccessToken({prompt:'consent'}); });
+}
+
+const btnCalendar = $('#btnCalendar');
+if (btnCalendar) {
+  btnCalendar.addEventListener('click', ()=>{ gcalTokenClient?.requestAccessToken({prompt:'consent'}); });
+}
 
 /* ===== Gmail scan (gợi ý) ===== */
 async function scanGmail(){
@@ -1454,20 +1575,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('bulkResume')?.addEventListener('click', bulkResume);
   document.getElementById('bulkDelete')?.addEventListener('click', bulkDelete);
 
-  // Enhanced export functions
-  document.getElementById('exportCSV')?.addEventListener('click', exportCSV);
-  document.getElementById('exportPDF')?.addEventListener('click', exportPDF);
-  document.getElementById('generateReport')?.addEventListener('click', () => {
-    notifications.show('Advanced reporting feature coming soon!', 'info', 3000);
-  });
+  // Enhanced export functions (removed from simplified UI, but check if elements exist)
+  const exportCSVBtn = document.getElementById('exportCSV');
+  if (exportCSVBtn && typeof exportCSV === 'function') {
+    exportCSVBtn.addEventListener('click', exportCSV);
+  }
 
-  // Quick filter tags
-  document.querySelectorAll('.quick-filter-tag').forEach(tag => {
-    tag.addEventListener('click', function() {
-      this.classList.toggle('active');
-      render();
+  const exportPDFBtn = document.getElementById('exportPDF');
+  if (exportPDFBtn && typeof exportPDF === 'function') {
+    exportPDFBtn.addEventListener('click', exportPDF);
+  }
+
+  const generateReportBtn = document.getElementById('generateReport');
+  if (generateReportBtn) {
+    generateReportBtn.addEventListener('click', () => {
+      notifications.show('Advanced reporting feature coming soon!', 'info', 3000);
     });
-  });
+  }
+
+  // Quick filter tags (removed from simplified UI, but check if elements exist)
+  const quickFilterTags = document.querySelectorAll('.quick-filter-tag');
+  if (quickFilterTags.length > 0) {
+    quickFilterTags.forEach(tag => {
+      tag.addEventListener('click', function() {
+        this.classList.toggle('active');
+        render();
+      });
+    });
+  }
 
   // Authentication state changes
   auth.onAuthStateChanged(async user => {
